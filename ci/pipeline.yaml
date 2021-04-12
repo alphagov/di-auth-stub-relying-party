@@ -1,0 +1,73 @@
+resource_types:
+  - name: cf-cli
+    type: docker-image
+    source:
+      repository: nulldriver/cf-cli-resource
+
+resources:
+  - name: di-auth-stub-relying-party
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/alphagov/di-auth-stub-relying-party.git
+      ignore_paths:
+        - ci/pipeline.yaml
+      branch: main
+
+  - name: pipeline-src
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/alphagov/di-auth-stub-relying-party.git
+      paths:
+        - ci/pipeline.yaml
+      branch: main
+
+  - name: di-auth-stub-relying-party-upload
+    type: cf-cli
+    icon: cloud-upload
+    source:
+      api: https://api.london.cloud.service.gov.uk
+      username: ((cf-username))
+      password: ((cf-password))
+      org: gds-digital-identity-authentication
+      space: sandbox
+
+jobs:
+  - name: update-pipeline
+    plan:
+      - get: pipeline-src
+        trigger: true
+      - set_pipeline: di-auth-stub-relying-party
+        file: pipeline-src/ci/pipeline.yaml
+  
+  - name: deploy-app
+    plan:
+    - get: di-auth-stub-relying-party
+      trigger: true
+    - task: build
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: gradle
+        inputs:
+          - name: di-auth-stub-relying-party
+        outputs:
+          - name: di-auth-stub-relying-party-zip
+        run:
+          path: /bin/bash
+          args:
+            - -euc
+            - |
+              cd di-auth-stub-relying-party
+              gradle --no-daemon build
+              cp build/distributions/di-auth-stub-relying-party.zip ../di-auth-stub-relying-party-zip/
+    - put: di-auth-stub-relying-party-upload
+      params:
+        command: push
+        manifest: di-auth-stub-relying-party/manifest.yml
+        path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
+
+

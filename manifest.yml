@@ -1,0 +1,10 @@
+---
+applications:
+  - name: di-auth-stub-relying-party
+    path: build/distributions/di-auth-stub-relying-party.zip
+    memory: 1G
+    buildpack: java_buildpack
+    command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 15.+}}'
