@@ -8,3 +8,8 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 15.+}}'
+      CLIENT_ID: "dummy-rp"
+      OP_AUTHORIZE_URL: "https://di-auth-oidc-provider.london.cloudapps.digital/authorize"
+      OP_TOKEN_URL: "https://di-auth-oidc-provider.london.cloudapps.digital/token"
+      OP_USERINFO_URL: "https://di-auth-oidc-provider.london.cloudapps.digital/userinfo"
+      AUTH_CALLBACK_URL: "https://di-auth-stub-relying-party.london.cloudapps.digital/oidc/callback"
