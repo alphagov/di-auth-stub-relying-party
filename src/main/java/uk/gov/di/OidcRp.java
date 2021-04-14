@@ -5,6 +5,7 @@ import static spark.Spark.staticFileLocation;
 import static spark.Spark.path;
 import static spark.Spark.get;
 import static spark.Spark.internalServerError;
+import static uk.gov.di.config.RelyingPartyConfig.PORT;
 import static uk.gov.di.handlers.HomeHandler.serveHomePage;
 import static uk.gov.di.handlers.OidcHandler.doAuthorize;
 import static uk.gov.di.handlers.OidcHandler.doAuthCallback;
@@ -12,7 +13,7 @@ import static uk.gov.di.handlers.OidcHandler.doAuthCallback;
 public class OidcRp {
     public OidcRp(){
         staticFileLocation("/public");
-        port(8081);
+        port(Integer.parseInt(PORT));
 
         InitRoutes();
     }
