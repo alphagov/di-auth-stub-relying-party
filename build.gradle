@@ -10,7 +10,10 @@ repositories {
 
 dependencies {
     compile(
-        "com.sparkjava:spark-core:2.9.3"
+        "com.sparkjava:spark-core:2.9.3",
+        "com.sparkjava:spark-template-mustache:2.7.1",
+        "com.nimbusds:oauth2-oidc-sdk:9.3.1",
+        "org.slf4j:slf4j-simple:1.7.2"
     )
 
     testCompile(
@@ -18,4 +21,4 @@ dependencies {
     )
 }
 
-mainClassName = 'uk.gov.di.HelloWorld'
+mainClassName = 'uk.gov.di.App'
