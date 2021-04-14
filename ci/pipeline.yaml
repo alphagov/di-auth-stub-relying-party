@@ -52,6 +52,7 @@ jobs:
           type: registry-image
           source:
             repository: gradle
+            tag: 6.8.3-jdk15
         inputs:
           - name: di-auth-stub-relying-party
         outputs:
