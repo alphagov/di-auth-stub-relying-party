@@ -7,6 +7,8 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -77,7 +79,8 @@ public class OidcHandler {
     private static AccessToken getToken(String authcode) throws URISyntaxException, ParseException, IOException {
         var codeGrant = new AuthorizationCodeGrant(new AuthorizationCode(authcode), new URI(AUTH_CALLBACK_URL));
 
-        var request = new TokenRequest(new URI(OP_TOKEN_URL), new ClientID(CLIENT_ID), codeGrant);
+        var clientSecretPost = new ClientSecretPost(new ClientID(CLIENT_ID), new Secret(CLIENT_SECRET));
+        var request = new TokenRequest(new URI(OP_TOKEN_URL), clientSecretPost, codeGrant, new Scope("openid"));
         var tokenResponse = OIDCTokenResponseParser.parse(request.toHTTPRequest().send());
 
         if (! tokenResponse.indicatesSuccess()) {
