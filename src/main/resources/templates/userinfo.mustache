@@ -81,7 +81,9 @@
                     </div>
                 </dl>
             </div>
-            <a href="{{logoutUrl}}" class="govuk-button">Log out</a>
+            <form action="/logout" method="post">
+                <button class="govuk-button" type="submit" name="logout">Log out</button>
+            </form>
         </div>
     </main>
 </div>

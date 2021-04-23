@@ -1,6 +1,7 @@
 package uk.gov.di;
 
 import static spark.Spark.port;
+import static spark.Spark.post;
 import static spark.Spark.staticFileLocation;
 import static spark.Spark.path;
 import static spark.Spark.get;
@@ -9,6 +10,7 @@ import static uk.gov.di.config.RelyingPartyConfig.PORT;
 import static uk.gov.di.handlers.HomeHandler.serveHomePage;
 import static uk.gov.di.handlers.OidcHandler.doAuthorize;
 import static uk.gov.di.handlers.OidcHandler.doAuthCallback;
+import static uk.gov.di.handlers.OidcHandler.doLogout;
 
 public class OidcRp {
     public OidcRp(){
@@ -25,6 +27,8 @@ public class OidcRp {
             get("/auth", doAuthorize);
             get("/callback", doAuthCallback);
         });
+
+        post("/logout", doLogout);
 
         internalServerError("<html><body><h1>Oops something went wrong</h1></body></html>");
     }

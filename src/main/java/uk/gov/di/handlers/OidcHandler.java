@@ -61,6 +61,11 @@ public class OidcHandler {
         return ViewHelper.render(model, "userinfo.mustache");
     };
 
+    public static Route doLogout = (Request request, Response response) -> {
+        response.redirect(LOGOUT_URL);
+        return response;
+    };
+
     private static UserInfo getUserInfo(AccessToken accessToken) throws IOException, URISyntaxException, ParseException {
         var httpResponse = new UserInfoRequest(new URI(OP_USERINFO_URL), new BearerAccessToken(accessToken.toString()))
                 .toHTTPRequest()
