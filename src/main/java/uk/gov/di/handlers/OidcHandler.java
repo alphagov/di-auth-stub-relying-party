@@ -57,7 +57,7 @@ public class OidcHandler {
         model.put("email", userInfo.getEmailAddress());
         model.put("surname", userInfo.getFamilyName());
         model.put("forename", userInfo.getGivenName());
-
+        model.put("logoutUrl", LOGOUT_URL);
         return ViewHelper.render(model, "userinfo.mustache");
     };
 
