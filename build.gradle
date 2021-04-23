@@ -17,5 +17,13 @@ dependencies {
     testImplementation "junit:junit:4.12"
 
 }
+run {
+    debugOptions {
+        enabled = true
+        port = 8083
+        server = true
+        suspend = false
+    }
+}
 
 mainClassName = 'uk.gov.di.App'
