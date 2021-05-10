@@ -2,3 +2,4 @@
 .idea/
 build/
 spikes/python/__pycache__/
+spikes/python/*.pyc

@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, request, session
+from flask import Flask, request, session, render_template, redirect
 from oic.oic import Client
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.oic.message import AuthorizationResponse
@@ -15,6 +15,10 @@ logging.basicConfig()
 logger = logging.getLogger('oic.oauth2')
 
 @app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/authorize')
 def make_authorization_request():
     client = Client(client_authn_method=CLIENT_AUTHN_METHOD, verify_ssl=False)
     provider_info = _make_wellknown_request(client)
@@ -36,7 +40,6 @@ def make_authorization_request():
     
     return Redirect(login_url)
 
-
 @app.route('/callback')
 def callback():
     client = cache['client']
@@ -44,7 +47,11 @@ def callback():
     token_response = _make_token_request(client, auth_response["code"])
     userinfo_response = _make_userinfo_request(client, token_response["access_token"])
 
-    return userinfo_response.to_json()
+    return render_template('userinfo.html', email = userinfo_response.to_dict()['email'])
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    return redirect("http://localhost:8080/logout?redirectUri=http://localhost:5000/", code=302)
 
 def _make_wellknown_request(client):
     uid = "http://localhost:8080"
