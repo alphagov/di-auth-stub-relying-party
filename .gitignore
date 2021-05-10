@@ -1,3 +1,4 @@
 .gradle/
 .idea/
 build/
+spikes/python/__pycache__/
