@@ -1,5 +1,6 @@
 import logging
 from flask import Flask, request, session, render_template, redirect
+from os import environ
 from oic.oic import Client
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.oic.message import AuthorizationResponse
@@ -13,6 +14,7 @@ cache = {}
 
 logging.basicConfig()
 logger = logging.getLogger('oic.oauth2')
+app.config['BASE_URL'] = environ.get('BASE_URL')
 
 @app.route('/')
 def home():
@@ -51,10 +53,10 @@ def callback():
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
-    return redirect("http://localhost:8080/logout?redirectUri=http://localhost:5000/", code=302)
+    return redirect(app.config['BASE_URL'] + "/logout?redirectUri=http://localhost:5000/", code=302)
 
 def _make_wellknown_request(client):
-    uid = "http://localhost:8080"
+    uid = app.config['BASE_URL']
     return client.provider_config(uid)
 
 def _make_registration_request(client, registration_endpoint): 
