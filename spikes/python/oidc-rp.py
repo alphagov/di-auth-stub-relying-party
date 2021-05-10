@@ -45,7 +45,7 @@ def make_authorization_request():
 @app.route('/callback')
 def callback():
     client = cache['client']
-    auth_response = client.parse_response(AuthorizationResponse, info=request.query_string, sformat="urlencoded")
+    auth_response = client.parse_response(AuthorizationResponse, info=request.query_string.decode('utf-8'), sformat="urlencoded")
     token_response = _make_token_request(client, auth_response["code"])
     userinfo_response = _make_userinfo_request(client, token_response["access_token"])
 
