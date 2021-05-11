@@ -1,3 +1,6 @@
 .gradle/
+.DS_Store
 .idea/
 build/
+example-clients/python/app/*.pyc
+example-clients/python/app/__pycache__
