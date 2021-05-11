@@ -1,5 +1,5 @@
 .gradle/
 .idea/
 build/
-spikes/python/__pycache__/
-spikes/python/*.pyc
+example-clients/python/__pycache__/
+example-clients/python/*.pyc
