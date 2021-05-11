@@ -1,5 +1,8 @@
-export FLASK_APP=oidc-rp.py
-pip3 install -r requirements.txt
+if ! docker info >/dev/null 2>&1; then
+  echo "Docker isn't running. Start docker and try again"
+  exit 1
+fi
+
 
 USE_LOCAL_OIDC_PROVIDER=0
 while [[ $# -gt 0 ]]; do
@@ -14,10 +17,9 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+docker build -t python-client .
 if [[ ${USE_LOCAL_OIDC_PROVIDER} == "1" ]]; then
-    export BASE_URL=http://localhost:8080
+    docker run -it -p 5000:5000 -e BASE_URL=http://localhost:8080 python-client 
 else
-    export BASE_URL=https://di-auth-oidc-provider.london.cloudapps.digital
+    docker run -it -p 5000:5000 -e BASE_URL=https://di-auth-oidc-provider.london.cloudapps.digital python-client
 fi
-
-flask run
