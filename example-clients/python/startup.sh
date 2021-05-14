@@ -19,7 +19,15 @@ done
 
 docker build -t python-client .
 if [[ ${USE_LOCAL_OIDC_PROVIDER} == "1" ]]; then
-    docker run -it -p 5000:5000 -e BASE_URL=http://localhost:8080 python-client 
+    docker run -it -p 5000:5000 \
+      -e BASE_URL=http://localhost:8080 \
+      -e CLIENT_ID=some_client_id \
+      -e CLIENT_SECRET=password \
+      python-client 
 else
-    docker run -it -p 5000:5000 -e BASE_URL=https://di-auth-oidc-provider.london.cloudapps.digital python-client
+    docker run -it -p 5000:5000 \
+      -e BASE_URL=https://di-auth-oidc-provider.london.cloudapps.digital \
+      -e CLIENT_ID=some_client_id \
+      -e CLIENT_SECRET=password \
+      python-client
 fi
