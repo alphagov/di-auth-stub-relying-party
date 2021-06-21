@@ -23,7 +23,7 @@ resources:
         - ci/pipeline.yaml
       branch: main
 
-  - name: di-auth-stub-relying-party-upload
+  - name: di-auth-stub-relying-party-upload-sandbox
     type: cf-cli
     icon: cloud-upload
     source:
@@ -32,6 +32,16 @@ resources:
       password: ((cf-password))
       org: gds-digital-identity-authentication
       space: sandbox
+
+  - name: di-auth-stub-relying-party-upload-build
+    type: cf-cli
+    icon: cloud-upload
+    source:
+      api: https://api.london.cloud.service.gov.uk
+      username: ((cf-username))
+      password: ((cf-password))
+      org: gds-digital-identity-authentication
+      space: build
 
 jobs:
   - name: update-pipeline
@@ -65,10 +75,23 @@ jobs:
               cd di-auth-stub-relying-party
               gradle --no-daemon build
               cp build/distributions/di-auth-stub-relying-party.zip ../di-auth-stub-relying-party-zip/
-    - put: di-auth-stub-relying-party-upload
+    - put: di-auth-stub-relying-party-upload-sandbox
       params:
         command: push
+        app_name: di-auth-stub-relying-party-sandbox
         manifest: di-auth-stub-relying-party/manifest.yml
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
+        environment_variables:
+          OP_BASE_URL: ((sandbox-op-base-url))
+          STUB_BASE_URL: ((sandbox-stub-base-url))
+    - put: di-auth-stub-relying-party-upload-build
+      params:
+        command: push
+        app_name: di-auth-stub-relying-party-build
+        manifest: di-auth-stub-relying-party/manifest.yml
+        path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
+        environment_variables:
+          OP_BASE_URL: ((build-op-base-url))
+          STUB_BASE_URL: ((build-stub-base-url))
 
 
