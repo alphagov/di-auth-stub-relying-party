@@ -18,6 +18,6 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
-      CLIENT_ID: "test-id"
+      CLIENT_ID: "SR-pLhOKIbJ6bFKq9VJPebIjsEY"
       CLIENT_SECRET: "test-secret"
       RP_PORT: "8080"
