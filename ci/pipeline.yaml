@@ -43,6 +43,16 @@ resources:
       org: gds-digital-identity-authentication
       space: build
 
+  - name: di-auth-stub-relying-party-upload-build-s2
+    type: cf-cli
+    icon: cloud-upload
+    source:
+      api: https://api.london.cloud.service.gov.uk
+      username: ((cf-username))
+      password: ((cf-password))
+      org: gds-digital-identity-authentication
+      space: build
+
 jobs:
   - name: update-pipeline
     plan:
