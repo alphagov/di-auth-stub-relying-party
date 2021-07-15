@@ -21,3 +21,16 @@ applications:
       CLIENT_ID: "SR-pLhOKIbJ6bFKq9VJPebIjsEY"
       CLIENT_SECRET: "test-secret"
       RP_PORT: "8080"
+      SERVICE_NAME: "Sample Service - Build S1"
+  - name: di-auth-stub-relying-party-build-s2
+    path: build/distributions/di-auth-stub-relying-party.zip
+    memory: 1G
+    buildpack: java_buildpack
+    command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
+      CLIENT_ID: "crkXDGK8gqIStiyAzY4ny-afKx4"
+      CLIENT_SECRET: "test-secret"
+      RP_PORT: "8080"
+      SERVICE_NAME: "Sample Service - Build S2"
