@@ -93,5 +93,14 @@ jobs:
         environment_variables:
           OP_BASE_URL: ((build-op-base-url))
           STUB_BASE_URL: ((build-stub-base-url))
+    - put: di-auth-stub-relying-party-upload-build-s2
+      params:
+        command: push
+        app_name: di-auth-stub-relying-party-build-s2
+        manifest: di-auth-stub-relying-party/manifest.yml
+        path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
+        environment_variables:
+          OP_BASE_URL: ((build-op-base-url))
+          STUB_BASE_URL: ((build-stub-base-url))
 
 
