@@ -1,4 +1,5 @@
 .gradle/
+.DS_Store
 .idea/
 build/
 logs/
@@ -6,3 +7,6 @@ logs/
 .project
 .settings/
 bin/
+node_modules
+example-clients/python/app/*.pyc
+example-clients/python/app/__pycache__

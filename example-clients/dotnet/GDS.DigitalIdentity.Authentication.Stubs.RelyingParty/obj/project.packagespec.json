@@ -1,0 +1,51 @@
+﻿{
+  "version": "1.0.0",
+  "restore": {
+    "projectUniqueName": "/Users/superman/Documents/ClientWork/GDS-identity/di-auth-stub-relying-party/example-clients/dotnet/GDS.DigitalIdentity.Authentication.Stubs.RelyingParty/GDS.DigitalIdentity.Authentication.Stubs.RelyingParty.csproj",
+    "projectName": "GDS.DigitalIdentity.Authentication.Stubs.RelyingParty",
+    "projectPath": "/Users/superman/Documents/ClientWork/GDS-identity/di-auth-stub-relying-party/example-clients/dotnet/GDS.DigitalIdentity.Authentication.Stubs.RelyingParty/GDS.DigitalIdentity.Authentication.Stubs.RelyingParty.csproj",
+    "outputPath": "/Users/superman/Documents/ClientWork/GDS-identity/di-auth-stub-relying-party/example-clients/dotnet/GDS.DigitalIdentity.Authentication.Stubs.RelyingParty/obj/",
+    "projectStyle": "PackageReference",
+    "fallbackFolders": [
+      "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+    ],
+    "originalTargetFrameworks": [
+      "netcoreapp3.1"
+    ],
+    "frameworks": {
+      "netcoreapp3.1": {
+        "projectReferences": {}
+      }
+    },
+    "warningProperties": {
+      "warnAsError": [
+        "NU1605"
+      ]
+    }
+  },
+  "frameworks": {
+    "netcoreapp3.1": {
+      "dependencies": {
+        "IdentityModel.AspNetCore": {
+          "target": "Package",
+          "version": "[3.0.0, )"
+        },
+        "IdentityModel.OidcClient": {
+          "target": "Package",
+          "version": "[3.1.2, )"
+        },
+        "Microsoft.NETCore.App": {
+          "suppressParent": "All",
+          "target": "Package",
+          "version": "(, )",
+          "autoReferenced": true
+        }
+      },
+      "imports": [
+        "net461"
+      ],
+      "assetTargetFallback": true,
+      "warn": true
+    }
+  }
+}
