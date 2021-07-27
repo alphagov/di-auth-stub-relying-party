@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="govuk-template ">
 <head>
-    <title>Example - GOV.UK - User Info</title>
+    <title>Example - GOV.UK - Signed out</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0b0c0c">
 
@@ -53,34 +53,10 @@
     <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content" role="main">
         <div class="govuk-!-margin-bottom-9">
             <h1 class="govuk-heading-l">
-                User information
+                Successfully signed out
             </h1>
         </div>
-        <div class="govuk-grid-row">
-            <div class="govuk-grid-column-full">
-                <dl class="govuk-summary-list">
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Email
-                        </dt>
-                        <dd class="govuk-summary-list__value" id="user-info-email">
-                            {{email}}
-                        </dd>
-                    </div>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Phone number
-                        </dt>
-                        <dd class="govuk-summary-list__value" id="user-info-phone-number">
-                            {{phoneNumber}}
-                        </dd>
-                    </div>
-                </dl>
-            </div>
-            <form action="/logout" method="post">
-                <button class="govuk-button" type="submit" name="logout">Log out</button>
-            </form>
-        </div>
+        <p class="govuk-body">You have been signed out successfully. This is a custom logout page.</p>
     </main>
 </div>
 

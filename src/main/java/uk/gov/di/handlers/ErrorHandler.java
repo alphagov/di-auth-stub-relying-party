@@ -7,15 +7,13 @@ import uk.gov.di.utils.ViewHelper;
 
 import java.util.HashMap;
 
-import static uk.gov.di.config.RelyingPartyConfig.SERVICE_NAME;
-
-public class HomeHandler implements Route {
+public class ErrorHandler implements Route {
     @Override
     public Object handle(Request request, Response response) {
-        request.session(true);
-
         var model = new HashMap<>();
-        model.put("servicename", SERVICE_NAME);
-        return ViewHelper.render(model, "home.mustache");
+        model.put("error", request.queryParams("error"));
+        model.put("error_description", request.queryParams("error_description"));
+
+        return ViewHelper.render(model, "error.mustache");
     }
 }
