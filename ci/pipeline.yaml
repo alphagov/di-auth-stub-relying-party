@@ -101,19 +101,19 @@ jobs:
         app_name: di-auth-stub-relying-party-build
         manifest: di-auth-stub-relying-party/manifest.yml
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
-        vars:
-          build-stub-url: ((build-stub-base-url))
-          build-op-url: ((build-op-base-url))
-          build-private-key: ((build-client-private-key))
+        environment_variables:
+          OP_BASE_URL: ((build-op-base-url))
+          STUB_BASE_URL: ((build-stub-base-url))
+          CLIENT_PRIVATE_KEY: ((build-client-private-key))
     - put: di-auth-stub-relying-party-upload-build-s2
       params:
         command: push
         app_name: di-auth-stub-relying-party-build-s2
         manifest: di-auth-stub-relying-party/manifest.yml
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
-        vars:
-          build-stub-url: ((build-stub-base-url))
-          build-op-url: ((build-op-base-url))
-          build-private-key: ((build-client-private-key))
+        environment_variables:
+          OP_BASE_URL: ((build-op-base-url))
+          STUB_BASE_URL: ((build-stub-base-url))
+          CLIENT_PRIVATE_KEY: ((build-client-private-key))
 
 
