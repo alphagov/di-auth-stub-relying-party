@@ -21,9 +21,6 @@ applications:
       CLIENT_ID: "SR-pLhOKIbJ6bFKq9VJPebIjsEY"
       RP_PORT: "8080"
       SERVICE_NAME: "Sample Service - Build S1"
-      OP_BASE_URL: ((build-op-url))
-      STUB_BASE_URL: ((build-stub-url))
-      CLIENT_PRIVATE_KEY: ((build-private-key))
   - name: di-auth-stub-relying-party-build-s2
     path: build/distributions/di-auth-stub-relying-party.zip
     memory: 1G
@@ -35,6 +32,3 @@ applications:
       CLIENT_ID: "crkXDGK8gqIStiyAzY4ny-afKx4"
       RP_PORT: "8080"
       SERVICE_NAME: "Sample Service - Build S2"
-      OP_BASE_URL: ((build-op-url))
-      STUB_BASE_URL: ((build-stub-url))
-      CLIENT_PRIVATE_KEY: ((build-private-key))
