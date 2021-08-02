@@ -27,6 +27,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+
+import static java.util.Collections.singletonList;
 
 public class Oidc {
 
@@ -88,7 +92,11 @@ public class Oidc {
                             null,
                             null);
 
-            var request = new TokenRequest(this.providerMetadata.getTokenEndpointURI(), privateKeyJWT, codeGrant, null);
+            var extraParams = new HashMap<String, List<String>>();
+            extraParams.put("client_id", singletonList(this.clientId));
+
+            var request = new TokenRequest(this.providerMetadata.getTokenEndpointURI(), privateKeyJWT, codeGrant, null, null, extraParams);
+
             var tokenResponse = OIDCTokenResponseParser.parse(request.toHTTPRequest().send());
 
             if (!tokenResponse.indicatesSuccess()) {
