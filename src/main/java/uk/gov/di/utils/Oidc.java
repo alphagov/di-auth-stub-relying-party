@@ -110,7 +110,6 @@ public class Oidc {
         }
     }
 
-
     public String buildAuthorizeRequest(String callbackUrl) throws URISyntaxException {
         var authorizationRequest = new AuthorizationRequest.Builder(
                 new ResponseType(ResponseType.Value.CODE), new ClientID(this.clientId))
@@ -125,12 +124,12 @@ public class Oidc {
     }
 
     public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri) throws URISyntaxException {
-        var logoutUri = new URIBuilder(this.idpUrl);
+        var logoutUri = new URIBuilder(this.idpUrl + "/logout");
         logoutUri.addParameter("id_token_hint", idToken);
         logoutUri.addParameter("state", state);
         logoutUri.addParameter("post_logout_redirect_uri", postLogoutRedirectUri);
 
-        return logoutUri.build().toString() + "/logout";
+        return logoutUri.build().toString();
     }
 
     public void validateIdToken(JWT idToken) throws MalformedURLException {
