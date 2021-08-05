@@ -113,7 +113,7 @@ jobs:
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
         environment_variables:
           OP_BASE_URL: ((build-op-base-url))
-          STUB_BASE_URL: ((build-stub-base-url))
+          STUB_BASE_URL: ((build-stub-base-url-s2))
           CLIENT_PRIVATE_KEY: ((build-client-private-key))
 
 
