@@ -93,7 +93,6 @@ jobs:
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
         environment_variables:
           OP_BASE_URL: ((sandbox-op-base-url))
-          STUB_BASE_URL: ((sandbox-stub-base-url))
           CLIENT_PRIVATE_KEY: ((sandbox-client-private-key))
     - put: di-auth-stub-relying-party-upload-build
       params:
@@ -103,7 +102,6 @@ jobs:
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
         environment_variables:
           OP_BASE_URL: ((build-op-base-url))
-          STUB_BASE_URL: ((build-stub-base-url))
           CLIENT_PRIVATE_KEY: ((build-client-private-key))
     - put: di-auth-stub-relying-party-upload-build-s2
       params:
@@ -113,7 +111,6 @@ jobs:
         path: di-auth-stub-relying-party-zip/di-auth-stub-relying-party.zip
         environment_variables:
           OP_BASE_URL: ((build-op-base-url))
-          STUB_BASE_URL: ((build-stub-base-url-s2))
           CLIENT_PRIVATE_KEY: ((build-client-private-key))
 
 

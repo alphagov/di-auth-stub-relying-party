@@ -24,7 +24,7 @@ import static uk.gov.di.config.RelyingPartyConfig.IDP_URL;
 public class OidcRp {
     public OidcRp(){
         staticFileLocation("/public");
-        port(Integer.parseInt(PORT));
+        port(PORT);
 
         initRoutes();
     }
