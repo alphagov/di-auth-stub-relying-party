@@ -10,6 +10,8 @@ applications:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
       CLIENT_ID: "some_client_id"
       RP_PORT: "8080"
+      OP_BASE_URL: ((op_base_url))
+      CLIENT_PRIVATE_KEY: ((client_private_key))
   - name: di-auth-stub-relying-party-build
     path: build/distributions/di-auth-stub-relying-party.zip
     memory: 1G
@@ -20,6 +22,8 @@ applications:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
       CLIENT_ID: "SR-pLhOKIbJ6bFKq9VJPebIjsEY"
       SERVICE_NAME: "Sample Service - Build S1"
+      OP_BASE_URL: ((op_base_url))
+      CLIENT_PRIVATE_KEY: ((client_private_key))
   - name: di-auth-stub-relying-party-build-s2
     path: build/distributions/di-auth-stub-relying-party.zip
     memory: 1G
@@ -30,3 +34,5 @@ applications:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
       CLIENT_ID: "crkXDGK8gqIStiyAzY4ny-afKx4"
       SERVICE_NAME: "Sample Service - Build S2"
+      OP_BASE_URL: ((op_base_url))
+      CLIENT_PRIVATE_KEY: ((client_private_key))
