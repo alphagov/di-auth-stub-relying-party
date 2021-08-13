@@ -36,3 +36,15 @@ applications:
       SERVICE_NAME: "Sample Service - Build S2"
       OP_BASE_URL: ((op_base_url))
       CLIENT_PRIVATE_KEY: ((client_private_key))
+  - name: di-auth-stub-relying-party-integration
+    path: build/distributions/di-auth-stub-relying-party.zip
+    memory: 1G
+    buildpack: java_buildpack
+    command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
+      CLIENT_ID: "WB39sAwPu8qQNJtStr1R8YRJOAI"
+      SERVICE_NAME: "Sample Service - Integration"
+      OP_BASE_URL: ((op_base_url))
+      CLIENT_PRIVATE_KEY: ((client_private_key))
