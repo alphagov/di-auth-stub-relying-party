@@ -1,6 +1,6 @@
 ---
 applications:
-  - name: di-auth-stub-relying-party-sandbox
+  - name: ((app_name))
     path: build/distributions/di-auth-stub-relying-party.zip
     memory: 1G
     buildpack: java_buildpack
@@ -8,43 +8,7 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
-      CLIENT_ID: "some_client_id"
-      RP_PORT: "8080"
-      OP_BASE_URL: ((op_base_url))
-      CLIENT_PRIVATE_KEY: ((client_private_key))
-  - name: di-auth-stub-relying-party-build
-    path: build/distributions/di-auth-stub-relying-party.zip
-    memory: 1G
-    buildpack: java_buildpack
-    command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
-    env:
-      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
-      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
-      CLIENT_ID: "SR-pLhOKIbJ6bFKq9VJPebIjsEY"
-      SERVICE_NAME: "Sample Service - Build S1"
-      OP_BASE_URL: ((op_base_url))
-      CLIENT_PRIVATE_KEY: ((client_private_key))
-  - name: di-auth-stub-relying-party-build-s2
-    path: build/distributions/di-auth-stub-relying-party.zip
-    memory: 1G
-    buildpack: java_buildpack
-    command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
-    env:
-      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
-      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
-      CLIENT_ID: "crkXDGK8gqIStiyAzY4ny-afKx4"
-      SERVICE_NAME: "Sample Service - Build S2"
-      OP_BASE_URL: ((op_base_url))
-      CLIENT_PRIVATE_KEY: ((client_private_key))
-  - name: di-auth-stub-relying-party-integration
-    path: build/distributions/di-auth-stub-relying-party.zip
-    memory: 1G
-    buildpack: java_buildpack
-    command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
-    env:
-      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
-      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
-      CLIENT_ID: "WB39sAwPu8qQNJtStr1R8YRJOAI"
-      SERVICE_NAME: "Sample Service - Integration"
+      CLIENT_ID: ((client_id))
+      SERVICE_NAME: ((service_name))
       OP_BASE_URL: ((op_base_url))
       CLIENT_PRIVATE_KEY: ((client_private_key))
