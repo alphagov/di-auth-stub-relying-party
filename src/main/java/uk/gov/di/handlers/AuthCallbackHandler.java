@@ -21,8 +21,7 @@ public class AuthCallbackHandler implements Route {
     @Override
     public Object handle(Request request, Response response) throws Exception {
         var tokens = oidcClient.makeTokenRequest(request.queryParams("code"), AUTH_CALLBACK_URL);
-        //TODO add this back in when there is an endpoint to get the cert from
-        //oidcClient.validateIdToken(tokens.getIDToken());
+        oidcClient.validateIdToken(tokens.getIDToken());
         request.session().attribute("idToken", tokens.getIDToken().getParsedString());
 
         var userInfo = oidcClient.makeUserInfoRequest(tokens.getAccessToken());
