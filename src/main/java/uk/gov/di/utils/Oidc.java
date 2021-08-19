@@ -3,6 +3,8 @@ package uk.gov.di.utils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.proc.BadJOSEException;
+import com.nimbusds.jose.util.DefaultResourceRetriever;
+import com.nimbusds.jose.util.ResourceRetriever;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
@@ -136,8 +138,8 @@ public class Oidc {
         var iss = new Issuer(this.providerMetadata.getIssuer());
         var clientID = new ClientID(this.clientId);
         var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
-
-        var idTokenValidator = new IDTokenValidator(iss, clientID, jwsAlg, this.providerMetadata.getJWKSetURI().toURL());
+        ResourceRetriever resourceRetriever = new DefaultResourceRetriever(30000, 30000);
+        var idTokenValidator = new IDTokenValidator(iss, clientID, jwsAlg, this.providerMetadata.getJWKSetURI().toURL(), resourceRetriever);
 
         try {
             idTokenValidator.validate(idToken, null);
