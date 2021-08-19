@@ -135,7 +135,7 @@ public class Oidc {
     public void validateIdToken(JWT idToken) throws MalformedURLException {
         var iss = new Issuer(this.providerMetadata.getIssuer());
         var clientID = new ClientID(this.clientId);
-        var jwsAlg = JWSAlgorithm.RS512;
+        var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
 
         var idTokenValidator = new IDTokenValidator(iss, clientID, jwsAlg, this.providerMetadata.getJWKSetURI().toURL());
 
