@@ -112,7 +112,7 @@ public class Oidc {
         }
     }
 
-    public String buildAuthorizeRequest(String callbackUrl) throws URISyntaxException {
+    public String buildAuthorizeRequest(String callbackUrl, String vtr) throws URISyntaxException {
         var authorizationRequest = new AuthorizationRequest.Builder(
                 new ResponseType(ResponseType.Value.CODE), new ClientID(this.clientId))
                 .scope(new Scope("openid", "phone", "email"))
@@ -120,6 +120,7 @@ public class Oidc {
                 .customParameter("nonce", generateNonce())
                 .redirectionURI(new URI(callbackUrl))
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
+                .customParameter("vtr", vtr)
                 .build();
 
         return authorizationRequest.toURI().toString();
