@@ -17,7 +17,11 @@ public class AuthorizeHandler implements Route {
 
     @Override
     public Object handle(Request request, Response response) throws Exception {
-        response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL));
+        String vtr = "Cm";
+        if (request.queryParams().contains("vtr")) {
+            vtr = request.queryParams("vtr");
+        }
+        response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL, vtr));
         return null;
     }
 }
