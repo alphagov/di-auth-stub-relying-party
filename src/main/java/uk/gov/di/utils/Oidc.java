@@ -20,6 +20,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
+import net.minidev.json.JSONArray;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.io.IOException;
@@ -113,6 +114,8 @@ public class Oidc {
     }
 
     public String buildAuthorizeRequest(String callbackUrl, String vtr) throws URISyntaxException {
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.add(vtr);
         var authorizationRequest = new AuthorizationRequest.Builder(
                 new ResponseType(ResponseType.Value.CODE), new ClientID(this.clientId))
                 .scope(new Scope("openid", "phone", "email"))
@@ -120,7 +123,7 @@ public class Oidc {
                 .customParameter("nonce", generateNonce())
                 .redirectionURI(new URI(callbackUrl))
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
-                .customParameter("vtr", vtr)
+                .customParameter("vtr", jsonArray.toJSONString())
                 .build();
 
         return authorizationRequest.toURI().toString();
