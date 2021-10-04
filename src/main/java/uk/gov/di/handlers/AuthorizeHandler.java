@@ -17,7 +17,7 @@ public class AuthorizeHandler implements Route {
 
     @Override
     public Object handle(Request request, Response response) throws Exception {
-        String vtr = "Cm";
+        String vtr = "Cl.Cm";
         if (request.queryParams().contains("vtr")) {
             vtr = request.queryParams("vtr");
         }
