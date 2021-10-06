@@ -15,6 +15,7 @@ public class RelyingPartyConfig {
     public static final String POST_LOGOUT_REDIRECT_URL=getCloudFoundryUri("http://localhost:8081") + "/signed-out";
     public static final String CLIENT_PRIVATE_KEY =getConfigValue("CLIENT_PRIVATE_KEY","PRIVATE-KEY");
     public static final int PORT=getCloudfoundryPort(8081);
+    public static final String MY_ACCOUNT_URL = getConfigValue("MY_ACCOUNT_URL", "https://account-management.integration.auth.ida.digital.cabinet-office.gov.uk/");
 
     private static String getConfigValue(String key, String defaultValue){
         var envValue = System.getenv(key);
