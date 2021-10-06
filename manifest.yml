@@ -12,3 +12,4 @@ applications:
       SERVICE_NAME: ((service_name))
       OP_BASE_URL: ((op_base_url))
       CLIENT_PRIVATE_KEY: ((client_private_key))
+      MY_ACCOUNT_URL: ((am_url))

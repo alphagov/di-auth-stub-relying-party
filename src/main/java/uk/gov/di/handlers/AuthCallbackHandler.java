@@ -9,6 +9,7 @@ import uk.gov.di.utils.ViewHelper;
 import java.util.HashMap;
 
 import static uk.gov.di.config.RelyingPartyConfig.AUTH_CALLBACK_URL;
+import static uk.gov.di.config.RelyingPartyConfig.MY_ACCOUNT_URL;
 
 public class AuthCallbackHandler implements Route {
 
@@ -29,6 +30,7 @@ public class AuthCallbackHandler implements Route {
         var model = new HashMap<>();
         model.put("email", userInfo.getEmailAddress());
         model.put("phone_number", userInfo.getPhoneNumber());
+        model.put("my_account_url", MY_ACCOUNT_URL);
 
         return ViewHelper.render(model, "userinfo.mustache");
     }
