@@ -7,7 +7,9 @@ import com.nimbusds.jose.util.DefaultResourceRetriever;
 import com.nimbusds.jose.util.ResourceRetriever;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.*;
+import com.nimbusds.oauth2.sdk.auth.JWTAuthenticationClaimsSet;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
+import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
@@ -29,7 +31,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -86,14 +91,15 @@ public class Oidc {
         var codeGrant = new AuthorizationCodeGrant(new AuthorizationCode(authCode), new URI(authCallbackUrl));
 
         try {
+            LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(5);
+            Date expiryDate = Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
+            JWTAuthenticationClaimsSet claimsSet =
+                    new JWTAuthenticationClaimsSet(
+                            new ClientID(this.clientId), new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
+            claimsSet.getExpirationTime().setTime(expiryDate.getTime());
             var privateKeyJWT =
                     new PrivateKeyJWT(
-                            new ClientID(this.clientId),
-                            URI.create(this.providerMetadata.getTokenEndpointURI().toString()),
-                            JWSAlgorithm.RS512,
-                            privateKeyReader.get(),
-                            null,
-                            null);
+                            claimsSet, JWSAlgorithm.RS512, privateKeyReader.get(), null, null);
 
             var extraParams = new HashMap<String, List<String>>();
             extraParams.put("client_id", singletonList(this.clientId));
