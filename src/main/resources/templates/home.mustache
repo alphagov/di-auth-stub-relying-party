@@ -52,9 +52,9 @@
                 {{servicename}}
             </h1>
         </div>
-        <h2 class="govuk-heading-l">Sign in</h2>
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
+                <h2 class="govuk-heading-l">Sign in</h2>
                 <div class="govuk-form-group">
                     <label for="input-2acd6325" class=" govuk-label">Username</label>
                     <input name="username" class="govuk-input govuk-input--width-20" id="input-2acd6325" type="text" tabindex="0" autofocus="autofocus">
@@ -66,17 +66,101 @@
                 <button class=" govuk-button" type="submit">Sign in</button>
             </div>
             <div class="govuk-grid-column-one-third">
-                <h2 class="govuk-heading-m">Continue with...</h2>
-                <p>
-                    <a class="govuk-button" href="/oidc/auth" id="govuk-signin-button">
-                        GOV.UK account - 2fa
-                    </a>
-                </p>
-                <p>
-                    <a class="govuk-button" href="/oidc/auth?vtr=Cl" id="govuk-signin-button">
-                        GOV.UK account - No 2fa
-                    </a>
-                </p>
+                <h2 class="govuk-heading-l">Continue with</h2>
+                <form method="post" action="/oidc/auth">
+                    <div class="govuk-form-group">
+                        <fieldset class="govuk-fieldset">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                                <h3 class="govuk-fieldset__heading">
+                                    Scopes
+                                </h3>
+                            </legend>
+                            <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                                <div class="govuk-checkboxes__item">
+                                    <input class="govuk-checkboxes__input" id="scopes-openid" name="scopes" type="checkbox" value="openid" checked disabled>
+                                    <label class="govuk-label govuk-checkboxes__label" for="scopes-openid">
+                                        openid
+                                    </label>
+                                </div>
+                                <div class="govuk-checkboxes__item">
+                                    <input class="govuk-checkboxes__input" id="scopes-email" name="scopes-email" type="checkbox" value="email" checked>
+                                    <label class="govuk-label govuk-checkboxes__label" for="scopes-email">
+                                        email address
+                                    </label>
+                                </div>
+                                <div class="govuk-checkboxes__item">
+                                    <input class="govuk-checkboxes__input" id="scopes-phone" name="scopes-phone" type="checkbox" value="phone" checked>
+                                    <label class="govuk-label govuk-checkboxes__label" for="scopes-phone">
+                                        phone number
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                        <div class="govuk-form-group">
+                        <fieldset class="govuk-fieldset">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                                <h3 class="govuk-fieldset__heading">
+                                    Second factor auth
+                                </h3>
+                            </legend>
+                            <div class="govuk-radios">
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="2fa-on" name="2fa" type="radio" value="Cl.Cm" checked>
+                                    <label class="govuk-label govuk-radios__label" for="2fa-on">
+                                        2FA
+                                    </label>
+                                </div>
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="2fa-off" name="2fa" type="radio" value="Cl">
+                                    <label class="govuk-label govuk-radios__label" for="2fa-off">
+                                        No 2FA
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        </div>
+                            <div class="govuk-form-group">
+                        <fieldset class="govuk-fieldset">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                                <h3 class="govuk-fieldset__heading">
+                                    Level of confidence
+                                </h3>
+                            </legend>
+                            <div class="govuk-radios">
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="loc-Pl" name="loc" type="radio" value="Pl" disabled>
+                                    <label class="govuk-label govuk-radios__label" for="loc-Pl">
+                                        Pl
+                                    </label>
+                                </div>
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="loc-Pm" name="loc" type="radio" value="Pm" >
+                                    <label class="govuk-label govuk-radios__label" for="loc-Pm">
+                                        Pm (MVP)
+                                    </label>
+                                </div>
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="loc-Ph" name="loc" type="radio" value="Ph" disabled>
+                                    <label class="govuk-label govuk-radios__label" for="loc-Ph">
+                                        Ph
+                                    </label>
+                                </div>
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="loc-Pv" name="loc" type="radio" value="Pv" disabled>
+                                    <label class="govuk-label govuk-radios__label" for="loc-Pv">
+                                        Pv
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                            </div>
+                        <button data-prevent-double-click="true" class="govuk-button" data-module="govuk-button" type="submit">
+                            Continue
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </main>

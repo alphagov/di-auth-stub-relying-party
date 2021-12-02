@@ -119,12 +119,12 @@ public class Oidc {
         }
     }
 
-    public String buildAuthorizeRequest(String callbackUrl, String vtr) throws URISyntaxException {
+    public String buildAuthorizeRequest(String callbackUrl, String vtr, List<String> scopes) throws URISyntaxException {
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
         var authorizationRequest = new AuthorizationRequest.Builder(
                 new ResponseType(ResponseType.Value.CODE), new ClientID(this.clientId))
-                .scope(new Scope("openid", "phone", "email"))
+                .scope(Scope.parse(scopes))
                 .state(new State())
                 .customParameter("nonce", generateNonce())
                 .redirectionURI(new URI(callbackUrl))
