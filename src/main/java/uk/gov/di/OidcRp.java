@@ -42,7 +42,7 @@ public class OidcRp {
         get("/", homeHandler);
 
         path("/oidc", () -> {
-            get("/auth", authorizeHandler);
+            post("/auth", authorizeHandler);
             get("/authorization-code/callback", authCallbackHandler);
         });
 

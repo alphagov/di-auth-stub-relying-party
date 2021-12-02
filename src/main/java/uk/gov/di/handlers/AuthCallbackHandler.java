@@ -22,8 +22,10 @@ public class AuthCallbackHandler implements Route {
     @Override
     public Object handle(Request request, Response response) throws Exception {
         var tokens = oidcClient.makeTokenRequest(request.queryParams("code"), AUTH_CALLBACK_URL);
+
         oidcClient.validateIdToken(tokens.getIDToken());
-        request.session().attribute("idToken", tokens.getIDToken().getParsedString());
+        request.session().attribute("idToken",
+                tokens.getIDToken().getParsedString());
 
         var userInfo = oidcClient.makeUserInfoRequest(tokens.getAccessToken());
 
@@ -31,6 +33,7 @@ public class AuthCallbackHandler implements Route {
         model.put("email", userInfo.getEmailAddress());
         model.put("phone_number", userInfo.getPhoneNumber());
         model.put("my_account_url", MY_ACCOUNT_URL);
+        model.put("id_token", tokens.getIDToken().getParsedString());
 
         return ViewHelper.render(model, "userinfo.mustache");
     }
