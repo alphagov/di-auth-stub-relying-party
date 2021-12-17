@@ -66,7 +66,7 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest.add(formParameters.get("claims-address"));
             }
 
-            response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL, vtr, scopes, Optional.ofNullable(claimsSetRequest)));
+            response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL, vtr, scopes, claimsSetRequest));
             return null;
 
         }catch (Exception ex){

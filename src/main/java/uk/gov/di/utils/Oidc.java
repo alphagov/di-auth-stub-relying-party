@@ -124,7 +124,7 @@ public class Oidc {
         }
     }
 
-    public String buildAuthorizeRequest(String callbackUrl, String vtr, List<String> scopes, Optional<ClaimsSetRequest> claimsSetRequest) throws URISyntaxException {
+    public String buildAuthorizeRequest(String callbackUrl, String vtr, List<String> scopes, ClaimsSetRequest claimsSetRequest) throws URISyntaxException {
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
         var authorizationRequestBuilder = new AuthenticationRequest.Builder(
@@ -134,7 +134,9 @@ public class Oidc {
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
                 .customParameter("vtr", jsonArray.toJSONString());
 
-        claimsSetRequest.ifPresent(t -> authorizationRequestBuilder.claims(new OIDCClaimsRequest().withUserInfoClaimsRequest(t)));
+        if (claimsSetRequest.getEntries().size() > 0) {
+            authorizationRequestBuilder.claims(new OIDCClaimsRequest().withUserInfoClaimsRequest(claimsSetRequest));
+        }
 
         return authorizationRequestBuilder.build().toURI().toString();
     }
