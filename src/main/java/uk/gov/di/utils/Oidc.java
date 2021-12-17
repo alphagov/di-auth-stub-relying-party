@@ -15,9 +15,13 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCClaimsRequest;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
+import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -37,6 +41,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Collections.singletonList;
 
@@ -119,20 +124,19 @@ public class Oidc {
         }
     }
 
-    public String buildAuthorizeRequest(String callbackUrl, String vtr, List<String> scopes) throws URISyntaxException {
+    public String buildAuthorizeRequest(String callbackUrl, String vtr, List<String> scopes, Optional<ClaimsSetRequest> claimsSetRequest) throws URISyntaxException {
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
-        var authorizationRequest = new AuthorizationRequest.Builder(
-                new ResponseType(ResponseType.Value.CODE), new ClientID(this.clientId))
-                .scope(Scope.parse(scopes))
+        var authorizationRequestBuilder = new AuthenticationRequest.Builder(
+                new ResponseType(ResponseType.Value.CODE), Scope.parse(scopes), new ClientID(this.clientId), new URI(callbackUrl))
                 .state(new State())
-                .customParameter("nonce", generateNonce())
-                .redirectionURI(new URI(callbackUrl))
+                .nonce(new Nonce())
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
-                .customParameter("vtr", jsonArray.toJSONString())
-                .build();
+                .customParameter("vtr", jsonArray.toJSONString());
 
-        return authorizationRequest.toURI().toString();
+        claimsSetRequest.ifPresent(t -> authorizationRequestBuilder.claims(new OIDCClaimsRequest().withUserInfoClaimsRequest(t)));
+
+        return authorizationRequestBuilder.build().toURI().toString();
     }
 
     public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri) throws URISyntaxException {
@@ -156,12 +160,5 @@ public class Oidc {
         } catch (BadJOSEException | JOSEException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private String generateNonce() {
-        var random = new SecureRandom();
-        byte bytes[] = new byte[20];
-        random.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

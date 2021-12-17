@@ -1,5 +1,6 @@
 package uk.gov.di.handlers;
 
+import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import spark.Request;
@@ -7,10 +8,12 @@ import spark.Response;
 import spark.Route;
 import uk.gov.di.utils.Oidc;
 
+import javax.swing.text.html.Option;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.config.RelyingPartyConfig.AUTH_CALLBACK_URL;
@@ -24,11 +27,13 @@ public class AuthorizeHandler implements Route {
     }
 
     @Override
-    public Object handle(Request request, Response response) throws Exception {
+    public Object handle(Request request, Response response) {
 
         try{
             List<String> scopes = new ArrayList<>();
             scopes.add("openid");
+
+            var claimsSetRequest = new ClaimsSetRequest();
 
             List<NameValuePair> pairs = URLEncodedUtils.parse(request.body(), Charset.defaultCharset());
 
@@ -49,7 +54,19 @@ public class AuthorizeHandler implements Route {
                 vtr = "%s.%s".formatted(formParameters.get("loc"), vtr);
             }
 
-            response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL, vtr, scopes));
+            if(formParameters.containsKey("claims-name")) {
+                claimsSetRequest.add(formParameters.get("claims-name"));
+            }
+
+            if(formParameters.containsKey("claims-birthdate")) {
+                claimsSetRequest.add(formParameters.get("claims-birthdate"));
+            }
+
+            if(formParameters.containsKey("claims-address")) {
+                claimsSetRequest.add(formParameters.get("claims-address"));
+            }
+
+            response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL, vtr, scopes, Optional.ofNullable(claimsSetRequest)));
             return null;
 
         }catch (Exception ex){
