@@ -5,7 +5,9 @@ apply plugin: 'idea'
 group 'uk.gov.di'
 
 repositories {
-    mavenCentral()
+    maven {
+        url 'https://gds.jfrog.io/artifactory/di-allowed-repos'
+    }
 }
 
 dependencies {
