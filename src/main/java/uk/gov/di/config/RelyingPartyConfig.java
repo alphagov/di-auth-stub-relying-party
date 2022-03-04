@@ -8,15 +8,6 @@ public class RelyingPartyConfig {
 
     private static final CfEnv cfEnv = new CfEnv();
 
-    public static final String SERVICE_NAME = serviceName();
-    public static final String IDP_URL = oidcProviderUrl();
-    public static final String CLIENT_ID = clientId();
-    public static final String AUTH_CALLBACK_URL = authCallbackUrl();
-    public static final String POST_LOGOUT_REDIRECT_URL = postLogoutRedirectUrl();
-    public static final String CLIENT_PRIVATE_KEY = clientPrivateKey();
-    public static final int PORT = getCloudfoundryPort();
-    public static final String MY_ACCOUNT_URL = accountManagementUrl();
-
     public static String authCallbackUrl() {
         return getCloudFoundryUri() + "/oidc/authorization-code/callback";
     }
