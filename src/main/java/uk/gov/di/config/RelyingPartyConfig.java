@@ -2,6 +2,7 @@ package uk.gov.di.config;
 
 import io.pivotal.cfenv.core.CfEnv;
 
+import static java.lang.System.getenv;
 import static java.text.MessageFormat.format;
 
 public class RelyingPartyConfig {
@@ -17,25 +18,25 @@ public class RelyingPartyConfig {
     }
 
     public static String clientPrivateKey() {
-        return getConfigValue("CLIENT_PRIVATE_KEY", "PRIVATE-KEY");
+        return configValue("CLIENT_PRIVATE_KEY", "PRIVATE-KEY");
     }
 
     public static String accountManagementUrl() {
-        return getConfigValue(
+        return configValue(
                 "MY_ACCOUNT_URL",
                 "https://account-management.integration.auth.ida.digital.cabinet-office.gov.uk/");
     }
 
     public static String clientId() {
-        return getConfigValue("CLIENT_ID", "some_client_id");
+        return configValue("CLIENT_ID", "some_client_id");
     }
 
     public static String serviceName() {
-        return getConfigValue("SERVICE_NAME", "Sample Government Service");
+        return configValue("SERVICE_NAME", "Sample Government Service");
     }
 
     public static String oidcProviderUrl() {
-        return getConfigValue(
+        return configValue(
                 "OP_BASE_URL", "https://api.build.auth.ida.digital.cabinet-office.gov.uk");
     }
 
@@ -53,12 +54,7 @@ public class RelyingPartyConfig {
         return 8081;
     }
 
-    private static String getConfigValue(String key, String defaultValue) {
-        var envValue = System.getenv(key);
-        if (envValue == null) {
-            return defaultValue;
-        }
-
-        return envValue;
+    private static String configValue(String key, String defaultValue) {
+        return getenv().getOrDefault(key, defaultValue);
     }
 }
