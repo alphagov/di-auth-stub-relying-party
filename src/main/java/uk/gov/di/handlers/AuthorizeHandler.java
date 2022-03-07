@@ -6,45 +6,46 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import uk.gov.di.config.RelyingPartyConfig;
 import uk.gov.di.utils.Oidc;
 
-import javax.swing.text.html.Option;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static uk.gov.di.config.RelyingPartyConfig.AUTH_CALLBACK_URL;
 
 public class AuthorizeHandler implements Route {
 
     private Oidc oidcClient;
 
-    public AuthorizeHandler(Oidc oidc){
+    public AuthorizeHandler(Oidc oidc) {
         this.oidcClient = oidc;
     }
 
     @Override
     public Object handle(Request request, Response response) {
 
-        try{
+        try {
             List<String> scopes = new ArrayList<>();
             scopes.add("openid");
 
             var claimsSetRequest = new ClaimsSetRequest();
 
-            List<NameValuePair> pairs = URLEncodedUtils.parse(request.body(), Charset.defaultCharset());
+            List<NameValuePair> pairs =
+                    URLEncodedUtils.parse(request.body(), Charset.defaultCharset());
 
-            Map<String, String> formParameters =  pairs.stream().collect(
-                    Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+            Map<String, String> formParameters =
+                    pairs.stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            NameValuePair::getName, NameValuePair::getValue));
 
-            if(formParameters.containsKey("scopes-email")){
+            if (formParameters.containsKey("scopes-email")) {
                 scopes.add(formParameters.get("scopes-email"));
             }
 
-            if(formParameters.containsKey("scopes-phone")){
+            if (formParameters.containsKey("scopes-phone")) {
                 scopes.add(formParameters.get("scopes-phone"));
             }
 
@@ -54,22 +55,24 @@ public class AuthorizeHandler implements Route {
                 vtr = "%s.%s".formatted(formParameters.get("loc"), vtr);
             }
 
-            if(formParameters.containsKey("claims-name")) {
+            if (formParameters.containsKey("claims-name")) {
                 claimsSetRequest.add(formParameters.get("claims-name"));
             }
 
-            if(formParameters.containsKey("claims-birthdate")) {
+            if (formParameters.containsKey("claims-birthdate")) {
                 claimsSetRequest.add(formParameters.get("claims-birthdate"));
             }
 
-            if(formParameters.containsKey("claims-address")) {
+            if (formParameters.containsKey("claims-address")) {
                 claimsSetRequest.add(formParameters.get("claims-address"));
             }
 
-            response.redirect(oidcClient.buildAuthorizeRequest(AUTH_CALLBACK_URL, vtr, scopes, claimsSetRequest));
+            response.redirect(
+                    oidcClient.buildAuthorizeRequest(
+                            RelyingPartyConfig.authCallbackUrl(), vtr, scopes, claimsSetRequest));
             return null;
 
-        }catch (Exception ex){
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }

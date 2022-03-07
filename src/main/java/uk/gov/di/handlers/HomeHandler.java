@@ -3,11 +3,10 @@ package uk.gov.di.handlers;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import uk.gov.di.config.RelyingPartyConfig;
 import uk.gov.di.utils.ViewHelper;
 
 import java.util.HashMap;
-
-import static uk.gov.di.config.RelyingPartyConfig.SERVICE_NAME;
 
 public class HomeHandler implements Route {
     @Override
@@ -15,7 +14,7 @@ public class HomeHandler implements Route {
         request.session(true);
 
         var model = new HashMap<>();
-        model.put("servicename", SERVICE_NAME);
+        model.put("servicename", RelyingPartyConfig.serviceName());
         return ViewHelper.render(model, "home.mustache");
     }
 }
