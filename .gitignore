@@ -5,3 +5,5 @@ build/
 node_modules
 example-clients/python/app/*.pyc
 example-clients/python/app/__pycache__
+.env
+.java-version

@@ -1,3 +1,5 @@
+import org.gradle.api.JavaVersion
+
 buildscript {
     repositories {
         maven {
@@ -54,12 +56,23 @@ spotless {
     }
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+}
+
 run {
     debugOptions {
         enabled = true
         port = 8083
         server = true
         suspend = false
+    }
+    file('.env').exists() && file('.env').readLines().each() {
+        if (!it.isEmpty() && !it.startsWith('#') && it.contains('=')) {
+            def (key, value) = it.tokenize('=')
+            environment key, value
+        }
     }
 }
 
