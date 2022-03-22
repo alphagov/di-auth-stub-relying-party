@@ -51,7 +51,7 @@ public class AuthorizeHandler implements Route {
 
             String vtr = formParameters.get("2fa");
 
-            if (formParameters.containsKey("loc")) {
+            if (formParameters.containsKey("loc") && !formParameters.get("loc").isEmpty()) {
                 vtr = "%s.%s".formatted(formParameters.get("loc"), vtr);
             }
 
