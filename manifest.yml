@@ -7,7 +7,7 @@ applications:
     command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
-      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 16.+}}'
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+}}'
       CLIENT_ID: ((client_id))
       SERVICE_NAME: ((service_name))
       OP_BASE_URL: ((op_base_url))
