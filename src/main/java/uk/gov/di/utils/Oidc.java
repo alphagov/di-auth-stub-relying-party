@@ -22,10 +22,12 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
+import com.nimbusds.openid.connect.sdk.claims.LogoutTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
+import com.nimbusds.openid.connect.sdk.validators.LogoutTokenValidator;
 import net.minidev.json.JSONArray;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -34,10 +36,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +47,8 @@ import static java.util.Collections.singletonList;
 
 public class Oidc {
 
-    public static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
+    public static final String WELL_KNOWN_OPENID_CONFIGURATION =
+            "/.well-known/openid-configuration";
 
     private final OIDCProviderMetadata providerMetadata;
     private final String idpUrl;
@@ -78,10 +79,14 @@ public class Oidc {
         }
     }
 
-    public UserInfo makeUserInfoRequest(AccessToken accessToken) throws IOException, ParseException {
-        var httpResponse = new UserInfoRequest(this.providerMetadata.getUserInfoEndpointURI(), new BearerAccessToken(accessToken.toString()))
-                .toHTTPRequest()
-                .send();
+    public UserInfo makeUserInfoRequest(AccessToken accessToken)
+            throws IOException, ParseException {
+        var httpResponse =
+                new UserInfoRequest(
+                                this.providerMetadata.getUserInfoEndpointURI(),
+                                new BearerAccessToken(accessToken.toString()))
+                        .toHTTPRequest()
+                        .send();
 
         var userInfoResponse = UserInfoResponse.parse(httpResponse);
 
@@ -92,15 +97,19 @@ public class Oidc {
         return userInfoResponse.toSuccessResponse().getUserInfo();
     }
 
-    public OIDCTokens makeTokenRequest(String authCode, String authCallbackUrl) throws URISyntaxException {
-        var codeGrant = new AuthorizationCodeGrant(new AuthorizationCode(authCode), new URI(authCallbackUrl));
+    public OIDCTokens makeTokenRequest(String authCode, String authCallbackUrl)
+            throws URISyntaxException {
+        var codeGrant =
+                new AuthorizationCodeGrant(
+                        new AuthorizationCode(authCode), new URI(authCallbackUrl));
 
         try {
             LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(5);
             Date expiryDate = Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
             JWTAuthenticationClaimsSet claimsSet =
                     new JWTAuthenticationClaimsSet(
-                            new ClientID(this.clientId), new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
+                            new ClientID(this.clientId),
+                            new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
             claimsSet.getExpirationTime().setTime(expiryDate.getTime());
             var privateKeyJWT =
                     new PrivateKeyJWT(
@@ -109,12 +118,20 @@ public class Oidc {
             var extraParams = new HashMap<String, List<String>>();
             extraParams.put("client_id", singletonList(this.clientId));
 
-            var request = new TokenRequest(this.providerMetadata.getTokenEndpointURI(), privateKeyJWT, codeGrant, null, null, extraParams);
+            var request =
+                    new TokenRequest(
+                            this.providerMetadata.getTokenEndpointURI(),
+                            privateKeyJWT,
+                            codeGrant,
+                            null,
+                            null,
+                            extraParams);
 
             var tokenResponse = OIDCTokenResponseParser.parse(request.toHTTPRequest().send());
 
             if (!tokenResponse.indicatesSuccess()) {
-                throw new RuntimeException(tokenResponse.toErrorResponse().getErrorObject().toString());
+                throw new RuntimeException(
+                        tokenResponse.toErrorResponse().getErrorObject().toString());
             }
 
             return tokenResponse.toSuccessResponse().getTokens().toOIDCTokens();
@@ -124,24 +141,32 @@ public class Oidc {
         }
     }
 
-    public String buildAuthorizeRequest(String callbackUrl, String vtr, List<String> scopes, ClaimsSetRequest claimsSetRequest) throws URISyntaxException {
+    public String buildAuthorizeRequest(
+            String callbackUrl, String vtr, List<String> scopes, ClaimsSetRequest claimsSetRequest)
+            throws URISyntaxException {
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
-        var authorizationRequestBuilder = new AuthenticationRequest.Builder(
-                new ResponseType(ResponseType.Value.CODE), Scope.parse(scopes), new ClientID(this.clientId), new URI(callbackUrl))
-                .state(new State())
-                .nonce(new Nonce())
-                .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
-                .customParameter("vtr", jsonArray.toJSONString());
+        var authorizationRequestBuilder =
+                new AuthenticationRequest.Builder(
+                                new ResponseType(ResponseType.Value.CODE),
+                                Scope.parse(scopes),
+                                new ClientID(this.clientId),
+                                new URI(callbackUrl))
+                        .state(new State())
+                        .nonce(new Nonce())
+                        .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
+                        .customParameter("vtr", jsonArray.toJSONString());
 
         if (claimsSetRequest.getEntries().size() > 0) {
-            authorizationRequestBuilder.claims(new OIDCClaimsRequest().withUserInfoClaimsRequest(claimsSetRequest));
+            authorizationRequestBuilder.claims(
+                    new OIDCClaimsRequest().withUserInfoClaimsRequest(claimsSetRequest));
         }
 
         return authorizationRequestBuilder.build().toURI().toString();
     }
 
-    public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri) throws URISyntaxException {
+    public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri)
+            throws URISyntaxException {
         var logoutUri = new URIBuilder(this.idpUrl + "/logout");
         logoutUri.addParameter("id_token_hint", idToken);
         logoutUri.addParameter("state", state);
@@ -155,12 +180,38 @@ public class Oidc {
         var clientID = new ClientID(this.clientId);
         var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
         ResourceRetriever resourceRetriever = new DefaultResourceRetriever(30000, 30000);
-        var idTokenValidator = new IDTokenValidator(iss, clientID, jwsAlg, this.providerMetadata.getJWKSetURI().toURL(), resourceRetriever);
+        var idTokenValidator =
+                new IDTokenValidator(
+                        iss,
+                        clientID,
+                        jwsAlg,
+                        this.providerMetadata.getJWKSetURI().toURL(),
+                        resourceRetriever);
 
         try {
             idTokenValidator.validate(idToken, null);
         } catch (BadJOSEException | JOSEException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<LogoutTokenClaimsSet> validateLogoutToken(JWT logoutToken) {
+        try {
+            var iss = new Issuer(this.providerMetadata.getIssuer());
+            var clientID = new ClientID(this.clientId);
+            var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
+            var validator =
+                    new LogoutTokenValidator(
+                            iss,
+                            clientID,
+                            jwsAlg,
+                            this.providerMetadata.getJWKSetURI().toURL(),
+                            new DefaultResourceRetriever(30000, 30000));
+
+            return Optional.of(validator.validate(logoutToken));
+        } catch (BadJOSEException | JOSEException | MalformedURLException e) {
+            e.printStackTrace();
+            return Optional.empty();
         }
     }
 }
