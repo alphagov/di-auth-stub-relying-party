@@ -3,6 +3,7 @@ package uk.gov.di;
 import uk.gov.di.config.RelyingPartyConfig;
 import uk.gov.di.handlers.AuthCallbackHandler;
 import uk.gov.di.handlers.AuthorizeHandler;
+import uk.gov.di.handlers.BackChannelLogoutHandler;
 import uk.gov.di.handlers.ErrorHandler;
 import uk.gov.di.handlers.HomeHandler;
 import uk.gov.di.handlers.SignOutHandler;
@@ -50,6 +51,7 @@ public class OidcRp {
 
         post("/logout", logoutHandler);
         get("/signed-out", signedOutHandler);
+        post("/backchannel-logout", new BackChannelLogoutHandler(oidcClient));
 
         internalServerError(errorHandler);
     }
