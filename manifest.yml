@@ -3,7 +3,7 @@ applications:
   - name: ((app_name))
     path: build/distributions/di-auth-stub-relying-party.zip
     memory: 1G
-    buildpack: java_buildpack
+    buildpack: https://github.com/cloudfoundry/java-buildpack/releases/tag/v4.48.3
     command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
