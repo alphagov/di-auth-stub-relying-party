@@ -31,6 +31,10 @@ public class RelyingPartyConfig {
         return configValue("CLIENT_ID", "some_client_id");
     }
 
+    public static String clientType() {
+        return configValue("CLIENT_TYPE", "web");
+    }
+
     public static String serviceName() {
         return configValue("SERVICE_NAME", "Sample Government Service");
     }

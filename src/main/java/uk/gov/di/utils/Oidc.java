@@ -2,10 +2,14 @@ package uk.gov.di.utils;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.util.DefaultResourceRetriever;
 import com.nimbusds.jose.util.ResourceRetriever;
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.auth.JWTAuthenticationClaimsSet;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
@@ -18,6 +22,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCClaimsRequest;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
@@ -165,6 +170,18 @@ public class Oidc {
         return authorizationRequestBuilder.build().toURI().toString();
     }
 
+    public String buildSecureAuthorizeRequest(String callbackUrl, String scopes) {
+        var authRequestBuilder =
+                new AuthorizationRequest.Builder(
+                                new ResponseType(ResponseType.Value.CODE),
+                                new ClientID(this.clientId))
+                        .requestObject(generateSignedJWT(scopes, callbackUrl))
+                        .scope(new Scope(OIDCScopeValue.OPENID))
+                        .endpointURI(this.providerMetadata.getAuthorizationEndpointURI());
+
+        return authRequestBuilder.build().toURI().toString();
+    }
+
     public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri)
             throws URISyntaxException {
         var logoutUri = new URIBuilder(this.idpUrl + "/logout");
@@ -213,5 +230,27 @@ public class Oidc {
             e.printStackTrace();
             return Optional.empty();
         }
+    }
+
+    private SignedJWT generateSignedJWT(String scopes, String callbackURL) {
+        var jwtClaimsSet =
+                new JWTClaimsSet.Builder()
+                        .audience(this.providerMetadata.getAuthorizationEndpointURI().toString())
+                        .claim("redirect_uri", callbackURL)
+                        .claim("response_type", ResponseType.CODE.toString())
+                        .claim("scope", scopes)
+                        .claim("client_id", this.clientId)
+                        .claim("state", new State())
+                        .issuer(this.clientId)
+                        .build();
+        var jwsHeader = new JWSHeader(JWSAlgorithm.RS512);
+        var signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
+        var signer = new RSASSASigner(this.privateKeyReader.get());
+        try {
+            signedJWT.sign(signer);
+        } catch (JOSEException e) {
+            throw new RuntimeException("Unable to sign secure request object", e);
+        }
+        return signedJWT;
     }
 }
