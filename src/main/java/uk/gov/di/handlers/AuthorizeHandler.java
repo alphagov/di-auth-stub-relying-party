@@ -30,8 +30,6 @@ public class AuthorizeHandler implements Route {
             List<String> scopes = new ArrayList<>();
             scopes.add("openid");
 
-            var claimsSetRequest = new ClaimsSetRequest();
-
             List<NameValuePair> pairs =
                     URLEncodedUtils.parse(request.body(), Charset.defaultCharset());
 
@@ -40,6 +38,14 @@ public class AuthorizeHandler implements Route {
                             .collect(
                                     Collectors.toMap(
                                             NameValuePair::getName, NameValuePair::getValue));
+
+            if (formParameters.containsKey("scopes-doc-checking-app")) {
+                scopes.add(formParameters.get("scopes-doc-checking-app"));
+                response.redirect(
+                        oidcClient.buildSecureAuthorizeRequest(
+                                RelyingPartyConfig.authCallbackUrl(), scopes.toString()));
+                return null;
+            }
 
             if (formParameters.containsKey("scopes-email")) {
                 scopes.add(formParameters.get("scopes-email"));
@@ -54,6 +60,8 @@ public class AuthorizeHandler implements Route {
             if (formParameters.containsKey("loc") && !formParameters.get("loc").isEmpty()) {
                 vtr = "%s.%s".formatted(formParameters.get("loc"), vtr);
             }
+
+            var claimsSetRequest = new ClaimsSetRequest();
 
             if (formParameters.containsKey("claims-name")) {
                 claimsSetRequest.add(formParameters.get("claims-name"));

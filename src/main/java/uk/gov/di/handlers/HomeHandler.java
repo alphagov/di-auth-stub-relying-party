@@ -15,6 +15,10 @@ public class HomeHandler implements Route {
 
         var model = new HashMap<>();
         model.put("servicename", RelyingPartyConfig.serviceName());
-        return ViewHelper.render(model, "home.mustache");
+        if (RelyingPartyConfig.clientType().equals("app")) {
+            return ViewHelper.render(model, "app-home.mustache");
+        } else {
+            return ViewHelper.render(model, "home.mustache");
+        }
     }
 }
