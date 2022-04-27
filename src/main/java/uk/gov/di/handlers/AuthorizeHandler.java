@@ -1,5 +1,6 @@
 package uk.gov.di.handlers;
 
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -34,7 +35,7 @@ public class AuthorizeHandler implements Route {
                 scopes.add("doc-checking-app");
                 response.redirect(
                         oidcClient.buildSecureAuthorizeRequest(
-                                RelyingPartyConfig.authCallbackUrl(), scopes.toString()));
+                                RelyingPartyConfig.authCallbackUrl(), Scope.parse(scopes)));
                 return null;
             }
 

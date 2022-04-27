@@ -170,7 +170,7 @@ public class Oidc {
         return authorizationRequestBuilder.build().toURI().toString();
     }
 
-    public String buildSecureAuthorizeRequest(String callbackUrl, String scopes) {
+    public String buildSecureAuthorizeRequest(String callbackUrl, Scope scopes) {
         var authRequestBuilder =
                 new AuthorizationRequest.Builder(
                                 new ResponseType(ResponseType.Value.CODE),
@@ -232,13 +232,13 @@ public class Oidc {
         }
     }
 
-    private SignedJWT generateSignedJWT(String scopes, String callbackURL) {
+    private SignedJWT generateSignedJWT(Scope scopes, String callbackURL) {
         var jwtClaimsSet =
                 new JWTClaimsSet.Builder()
                         .audience(this.providerMetadata.getAuthorizationEndpointURI().toString())
                         .claim("redirect_uri", callbackURL)
                         .claim("response_type", ResponseType.CODE.toString())
-                        .claim("scope", scopes)
+                        .claim("scope", scopes.toString())
                         .claim("client_id", this.clientId)
                         .claim("state", new State())
                         .issuer(this.clientId)
