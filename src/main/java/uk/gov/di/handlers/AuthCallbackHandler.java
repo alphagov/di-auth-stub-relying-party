@@ -22,18 +22,23 @@ public class AuthCallbackHandler implements Route {
         var tokens =
                 oidcClient.makeTokenRequest(
                         request.queryParams("code"), RelyingPartyConfig.authCallbackUrl());
-        System.out.println("Access Token: " + tokens.getAccessToken().toJSONString());
         oidcClient.validateIdToken(tokens.getIDToken());
         request.session().attribute("idToken", tokens.getIDToken().getParsedString());
 
         var userInfo = oidcClient.makeUserInfoRequest(tokens.getAccessToken());
 
         var model = new HashMap<>();
-        model.put("email", userInfo.getEmailAddress());
-        model.put("phone_number", userInfo.getPhoneNumber());
+        var templateName = "userinfo.mustache";
+        if (RelyingPartyConfig.clientType().equals("app")) {
+            model.put("doc_app_credential", userInfo.getClaim("doc-app-credential"));
+            templateName = "doc-app-userinfo.mustache";
+        } else {
+            model.put("email", userInfo.getEmailAddress());
+            model.put("phone_number", userInfo.getPhoneNumber());
+        }
         model.put("my_account_url", RelyingPartyConfig.accountManagementUrl());
         model.put("id_token", tokens.getIDToken().getParsedString());
 
-        return ViewHelper.render(model, "userinfo.mustache");
+        return ViewHelper.render(model, templateName);
     }
 }
