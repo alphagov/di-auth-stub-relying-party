@@ -22,7 +22,6 @@ public class AuthCallbackHandler implements Route {
         var tokens =
                 oidcClient.makeTokenRequest(
                         request.queryParams("code"), RelyingPartyConfig.authCallbackUrl());
-        System.out.println("Access Token: " + tokens.getAccessToken().toJSONString());
         oidcClient.validateIdToken(tokens.getIDToken());
         request.session().attribute("idToken", tokens.getIDToken().getParsedString());
 
