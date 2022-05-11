@@ -238,7 +238,7 @@ public class Oidc {
                         .audience(this.providerMetadata.getAuthorizationEndpointURI().toString())
                         .claim("redirect_uri", callbackURL)
                         .claim("response_type", ResponseType.CODE.toString())
-                        .claim("scope", scopes.toString())
+                        .claim("scope", scopes)
                         .claim("client_id", this.clientId)
                         .claim("state", new State().getValue())
                         .issuer(this.clientId)
