@@ -240,7 +240,7 @@ public class Oidc {
                         .claim("response_type", ResponseType.CODE.toString())
                         .claim("scope", scopes.toString())
                         .claim("client_id", this.clientId)
-                        .claim("state", new State())
+                        .claim("state", new State().getValue())
                         .issuer(this.clientId)
                         .build();
         var jwsHeader = new JWSHeader(JWSAlgorithm.RS512);
