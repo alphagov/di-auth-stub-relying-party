@@ -44,11 +44,8 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-
-import static java.util.Collections.singletonList;
 
 public class Oidc {
 
@@ -120,9 +117,6 @@ public class Oidc {
                     new PrivateKeyJWT(
                             claimsSet, JWSAlgorithm.RS512, privateKeyReader.get(), null, null);
 
-            var extraParams = new HashMap<String, List<String>>();
-            extraParams.put("client_id", singletonList(this.clientId));
-
             var request =
                     new TokenRequest(
                             this.providerMetadata.getTokenEndpointURI(),
@@ -130,7 +124,7 @@ public class Oidc {
                             codeGrant,
                             null,
                             null,
-                            extraParams);
+                            null);
 
             var tokenResponse = OIDCTokenResponseParser.parse(request.toHTTPRequest().send());
 
