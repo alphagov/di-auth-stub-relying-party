@@ -8,6 +8,7 @@ import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.ViewHelper;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public class AuthCallbackHandler implements Route {
 
@@ -35,6 +36,10 @@ public class AuthCallbackHandler implements Route {
         } else {
             model.put("email", userInfo.getEmailAddress());
             model.put("phone_number", userInfo.getPhoneNumber());
+            boolean coreIdentityCLaimPresent =
+                    Objects.nonNull(
+                            userInfo.getClaim("https://vocab.account.gov.uk/v1/coreIdentityJWT"));
+            model.put("core_identity_claim_present", coreIdentityCLaimPresent);
         }
         model.put("my_account_url", RelyingPartyConfig.accountManagementUrl());
         model.put("id_token", tokens.getIDToken().getParsedString());
