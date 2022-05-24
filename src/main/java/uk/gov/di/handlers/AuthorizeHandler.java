@@ -75,13 +75,13 @@ public class AuthorizeHandler implements Route {
             if (formParameters.containsKey("claims-passport")) {
                 var passportEntry =
                         new ClaimsSetRequest.Entry(formParameters.get("claims-passport")).withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest.add(formParameters.get(passportEntry));
+                claimsSetRequest.add(passportEntry);
             }
 
             if (formParameters.containsKey("claims-address")) {
                 var addressEntry =
                         new ClaimsSetRequest.Entry(formParameters.get("claims-address")).withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest.add(formParameters.get(addressEntry));
+                claimsSetRequest.add(addressEntry);
             }
 
             response.redirect(
