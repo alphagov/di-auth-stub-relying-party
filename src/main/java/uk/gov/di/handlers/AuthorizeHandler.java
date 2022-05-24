@@ -1,6 +1,8 @@
 package uk.gov.di.handlers;
 
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.openid.connect.sdk.OIDCClaimsRequest;
+import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -64,16 +66,22 @@ public class AuthorizeHandler implements Route {
 
             var claimsSetRequest = new ClaimsSetRequest();
 
-            if (formParameters.containsKey("claims-name")) {
-                claimsSetRequest.add(formParameters.get("claims-name"));
+            if (formParameters.containsKey("claims-core-identity")) {
+                var identityEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-core-identity")).withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest.add(identityEntry);
             }
 
-            if (formParameters.containsKey("claims-birthdate")) {
-                claimsSetRequest.add(formParameters.get("claims-birthdate"));
+            if (formParameters.containsKey("claims-passport")) {
+                var passportEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-passport")).withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest.add(formParameters.get(passportEntry));
             }
 
             if (formParameters.containsKey("claims-address")) {
-                claimsSetRequest.add(formParameters.get("claims-address"));
+                var addressEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-address")).withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest.add(formParameters.get(addressEntry));
             }
 
             response.redirect(
