@@ -1,5 +1,7 @@
 package uk.gov.di.handlers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -12,6 +14,8 @@ import java.util.Objects;
 
 public class AuthCallbackHandler implements Route {
 
+    private static final Logger LOG = LogManager.getLogger(AuthCallbackHandler.class);
+
     private Oidc oidcClient;
 
     public AuthCallbackHandler(Oidc oidc) {
@@ -20,6 +24,7 @@ public class AuthCallbackHandler implements Route {
 
     @Override
     public Object handle(Request request, Response response) throws Exception {
+        LOG.info("Callback received");
         var tokens =
                 oidcClient.makeTokenRequest(
                         request.queryParams("code"), RelyingPartyConfig.authCallbackUrl());

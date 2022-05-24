@@ -35,6 +35,8 @@ import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import com.nimbusds.openid.connect.sdk.validators.LogoutTokenValidator;
 import net.minidev.json.JSONArray;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -48,6 +50,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class Oidc {
+
+    private static final Logger LOG = LogManager.getLogger(Oidc.class);
 
     public static final String WELL_KNOWN_OPENID_CONFIGURATION =
             "/.well-known/openid-configuration";
@@ -76,13 +80,15 @@ public class Oidc {
             }
 
             return OIDCProviderMetadata.parse(providerInfo);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        } catch (Exception e) {
+            LOG.error("Unexpected exception thrown when loading provider metadata", e);
+            throw new RuntimeException(e);
         }
     }
 
     public UserInfo makeUserInfoRequest(AccessToken accessToken)
             throws IOException, ParseException {
+        LOG.info("Making userinfo request");
         var httpResponse =
                 new UserInfoRequest(
                                 this.providerMetadata.getUserInfoEndpointURI(),
@@ -93,14 +99,18 @@ public class Oidc {
         var userInfoResponse = UserInfoResponse.parse(httpResponse);
 
         if (!userInfoResponse.indicatesSuccess()) {
+            LOG.error("Userinfo request was unsuccessful");
             throw new RuntimeException(userInfoResponse.toErrorResponse().toString());
         }
+
+        LOG.info("Userinfo request was successful");
 
         return userInfoResponse.toSuccessResponse().getUserInfo();
     }
 
     public OIDCTokens makeTokenRequest(String authCode, String authCallbackUrl)
             throws URISyntaxException {
+        LOG.info("Making Token Request");
         var codeGrant =
                 new AuthorizationCodeGrant(
                         new AuthorizationCode(authCode), new URI(authCallbackUrl));
@@ -129,13 +139,16 @@ public class Oidc {
             var tokenResponse = OIDCTokenResponseParser.parse(request.toHTTPRequest().send());
 
             if (!tokenResponse.indicatesSuccess()) {
+                LOG.error("TokenRequest was unsuccessful");
                 throw new RuntimeException(
                         tokenResponse.toErrorResponse().getErrorObject().toString());
             }
+            LOG.error("TokenRequest was successful");
 
             return tokenResponse.toSuccessResponse().getTokens().toOIDCTokens();
 
         } catch (JOSEException | ParseException | IOException e) {
+            LOG.error("Unexpected exception thrown when making token request", e);
             throw new RuntimeException(e);
         }
     }
@@ -143,6 +156,7 @@ public class Oidc {
     public String buildAuthorizeRequest(
             String callbackUrl, String vtr, List<String> scopes, ClaimsSetRequest claimsSetRequest)
             throws URISyntaxException {
+        LOG.info("Building Authorize Request");
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
         var authorizationRequestBuilder =
@@ -157,6 +171,7 @@ public class Oidc {
                         .customParameter("vtr", jsonArray.toJSONString());
 
         if (claimsSetRequest.getEntries().size() > 0) {
+            LOG.info("Adding claims to Authorize Request");
             authorizationRequestBuilder.claims(
                     new OIDCClaimsRequest().withUserInfoClaimsRequest(claimsSetRequest));
         }
@@ -165,6 +180,7 @@ public class Oidc {
     }
 
     public String buildSecureAuthorizeRequest(String callbackUrl, Scope scopes) {
+        LOG.info("Building secure Authorize Request");
         var authRequestBuilder =
                 new AuthorizationRequest.Builder(
                                 new ResponseType(ResponseType.Value.CODE),
@@ -187,6 +203,7 @@ public class Oidc {
     }
 
     public void validateIdToken(JWT idToken) throws MalformedURLException {
+        LOG.info("Validating ID token");
         var iss = new Issuer(this.providerMetadata.getIssuer());
         var clientID = new ClientID(this.clientId);
         var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
@@ -202,6 +219,7 @@ public class Oidc {
         try {
             idTokenValidator.validate(idToken, null);
         } catch (BadJOSEException | JOSEException e) {
+            LOG.error("Unexpected exception thrown when validating ID token", e);
             throw new RuntimeException(e);
         }
     }
@@ -221,7 +239,7 @@ public class Oidc {
 
             return Optional.of(validator.validate(logoutToken));
         } catch (BadJOSEException | JOSEException | MalformedURLException e) {
-            e.printStackTrace();
+            LOG.error("Unexpected exception thrown when validating logout token", e);
             return Optional.empty();
         }
     }
@@ -243,6 +261,7 @@ public class Oidc {
         try {
             signedJWT.sign(signer);
         } catch (JOSEException e) {
+            LOG.error("Unable to sign secure request object", e);
             throw new RuntimeException("Unable to sign secure request object", e);
         }
         return signedJWT;
