@@ -4,6 +4,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -16,6 +18,8 @@ import static java.util.stream.Collectors.toMap;
 
 public class BackChannelLogoutHandler implements Route {
 
+    private static final Logger LOG = LogManager.getLogger(BackChannelLogoutHandler.class);
+
     private final Oidc oidcClient;
 
     public BackChannelLogoutHandler(Oidc oidcClient) {
@@ -24,7 +28,7 @@ public class BackChannelLogoutHandler implements Route {
 
     @Override
     public Object handle(Request request, Response response) {
-
+        LOG.info("Request received in BackChannelLogoutHandler");
         var payload =
                 URLEncodedUtils.parse(request.body(), defaultCharset()).stream()
                         .collect(toMap(NameValuePair::getName, NameValuePair::getValue))
@@ -38,16 +42,16 @@ public class BackChannelLogoutHandler implements Route {
                     .map(ClaimsSet::toJSONString)
                     .ifPresentOrElse(
                             claims -> {
-                                System.out.println("Validated logout token. Claims: " + claims);
+                                LOG.info("Validated logout token. Claims: {}", claims);
                                 response.status(200);
                             },
                             () -> {
-                                System.out.println("Unable to validate logout token");
+                                LOG.error("Unable to validate logout token");
                                 response.status(400);
                             });
 
         } catch (ParseException e) {
-            e.printStackTrace();
+            LOG.info("Exception when parsing JWT", e);
             response.status(500);
         }
 
