@@ -6,6 +6,8 @@ applications:
     buildpacks:
       - https://github.com/cloudfoundry/java-buildpack.git#v4.48.3
     command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
+    services:
+      - ((environment_name))-splunk
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+}}'
