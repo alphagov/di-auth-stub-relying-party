@@ -1,0 +1,16 @@
+---
+
+applications:
+  - name: ((app-name))
+    instances: 2
+    memory: 256M
+
+    buildpacks:
+      - nginx_buildpack
+
+    health-check-type: http
+    health-check-http-endpoint: /_route-service-health
+
+    env:
+      APP_NAME: ((app-name))
+      ALLOWED_IPS: ((allowed-ips))
