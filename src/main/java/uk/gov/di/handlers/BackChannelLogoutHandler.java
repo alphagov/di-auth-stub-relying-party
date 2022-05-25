@@ -4,8 +4,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -18,7 +18,7 @@ import static java.util.stream.Collectors.toMap;
 
 public class BackChannelLogoutHandler implements Route {
 
-    private static final Logger LOG = LogManager.getLogger(BackChannelLogoutHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BackChannelLogoutHandler.class);
 
     private final Oidc oidcClient;
 

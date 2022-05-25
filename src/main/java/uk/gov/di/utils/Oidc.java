@@ -35,8 +35,8 @@ import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import com.nimbusds.openid.connect.sdk.validators.LogoutTokenValidator;
 import net.minidev.json.JSONArray;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -51,7 +51,7 @@ import java.util.Optional;
 
 public class Oidc {
 
-    private static final Logger LOG = LogManager.getLogger(Oidc.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Oidc.class);
 
     public static final String WELL_KNOWN_OPENID_CONFIGURATION =
             "/.well-known/openid-configuration";
