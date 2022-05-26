@@ -5,8 +5,8 @@ import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class AuthorizeHandler implements Route {
 
-    private static final Logger LOG = LogManager.getLogger(AuthorizeHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorizeHandler.class);
 
     private Oidc oidcClient;
 

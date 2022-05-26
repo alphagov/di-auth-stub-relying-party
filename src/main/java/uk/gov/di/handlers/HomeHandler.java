@@ -1,7 +1,7 @@
 package uk.gov.di.handlers;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 
 public class HomeHandler implements Route {
 
-    private static final Logger LOG = LogManager.getLogger(HomeHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HomeHandler.class);
 
     @Override
     public Object handle(Request request, Response response) {
