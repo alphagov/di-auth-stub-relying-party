@@ -77,4 +77,10 @@ run {
     }
 }
 
+task zipRouteService(type: Zip) {
+    from 'nginx/'
+    include '*'
+    archiveName 'di-auth-stub-rp-route-service.zip'
+}
+
 mainClassName = 'uk.gov.di.App'
