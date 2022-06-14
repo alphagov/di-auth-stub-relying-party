@@ -12,16 +12,21 @@ function usage() {
   Requires a GDS CLI, AWS CLI and jq installed and configured.
 
   Usage:
-    $0 [-c|--clean]
+    $0 [-c|--clean] [--api-dir <directory>]
 
   Options:
     -c, --clean               run gradle clean before build
+    --api-dir <directory>     sets the path the `di-authentication-api` repo locally (defaults to ${DIR}/../di-authentication-api)
 USAGE
 }
 
 CLEAN=""
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --api-dir)
+      shift
+      API_DIR=$1
+      ;;
     -c|--clean)
       CLEAN="clean"
       ;;
