@@ -251,6 +251,7 @@ public class Oidc {
                         .claim("redirect_uri", callbackURL)
                         .claim("response_type", ResponseType.CODE.toString())
                         .claim("scope", scopes.toString())
+                        .claim("nonce", new Nonce().getValue())
                         .claim("client_id", this.clientId)
                         .claim("state", new State().getValue())
                         .issuer(this.clientId)
