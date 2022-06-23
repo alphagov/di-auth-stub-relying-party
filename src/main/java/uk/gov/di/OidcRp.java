@@ -11,6 +11,7 @@ import uk.gov.di.handlers.SignedOutHandler;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.PrivateKeyReader;
 
+import static spark.Spark.after;
 import static spark.Spark.get;
 import static spark.Spark.internalServerError;
 import static spark.Spark.path;
@@ -54,5 +55,7 @@ public class OidcRp {
         post("/backchannel-logout", new BackChannelLogoutHandler(oidcClient));
 
         internalServerError(errorHandler);
+
+        after("/*", (req, res) -> res.header("Server", "govuk-sign-in-stub-rp"));
     }
 }
