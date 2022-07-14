@@ -10,6 +10,7 @@ import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.ViewHelper;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class AuthCallbackHandler implements Route {
@@ -36,7 +37,8 @@ public class AuthCallbackHandler implements Route {
         var model = new HashMap<>();
         var templateName = "userinfo.mustache";
         if (RelyingPartyConfig.clientType().equals("app")) {
-            model.put("doc_app_credential", userInfo.getClaim("doc-app-credential"));
+            List<String> docAppCredential = (List<String>) userInfo.getClaim("doc-app-credential");
+            model.put("doc_app_credential", docAppCredential.get(0));
             templateName = "doc-app-userinfo.mustache";
         } else {
             model.put("email", userInfo.getEmailAddress());
