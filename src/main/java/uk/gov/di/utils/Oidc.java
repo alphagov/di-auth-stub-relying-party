@@ -10,6 +10,8 @@ import com.nimbusds.jose.util.ResourceRetriever;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.langtag.LangTag;
+import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.auth.JWTAuthenticationClaimsSet;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
@@ -154,7 +156,11 @@ public class Oidc {
     }
 
     public String buildAuthorizeRequest(
-            String callbackUrl, String vtr, List<String> scopes, ClaimsSetRequest claimsSetRequest)
+            String callbackUrl,
+            String vtr,
+            List<String> scopes,
+            ClaimsSetRequest claimsSetRequest,
+            String language)
             throws URISyntaxException {
         LOG.info("Building Authorize Request");
         JSONArray jsonArray = new JSONArray();
@@ -175,6 +181,16 @@ public class Oidc {
             authorizationRequestBuilder.claims(
                     new OIDCClaimsRequest().withUserInfoClaimsRequest(claimsSetRequest));
         }
+
+        if (!language.isBlank()) {
+            try {
+                LOG.info("Adding ui_locales to Authorize Request {}", language);
+                authorizationRequestBuilder.uiLocales(List.of(LangTag.parse(language)));
+            } catch (LangTagException e) {
+                LOG.error("Unable to parse language {}", language);
+            }
+        }
+        ;
 
         return authorizationRequestBuilder.build().toURI().toString();
     }
