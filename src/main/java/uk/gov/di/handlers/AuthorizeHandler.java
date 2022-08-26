@@ -98,9 +98,15 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(addressEntry);
             }
 
+            String language = formParameters.get("lng");
+
             var opURL =
                     oidcClient.buildAuthorizeRequest(
-                            RelyingPartyConfig.authCallbackUrl(), vtr, scopes, claimsSetRequest);
+                            RelyingPartyConfig.authCallbackUrl(),
+                            vtr,
+                            scopes,
+                            claimsSetRequest,
+                            language);
 
             LOG.info("Redirecting to OP");
             response.redirect(opURL);
