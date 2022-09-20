@@ -21,6 +21,7 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCClaimsRequest;
@@ -145,7 +146,17 @@ public class Oidc {
                 throw new RuntimeException(
                         tokenResponse.toErrorResponse().getErrorObject().toString());
             }
-            LOG.error("TokenRequest was successful");
+
+            LOG.info("TokenRequest was successful");
+
+            Optional.of(tokenResponse)
+                    .map(TokenResponse::toSuccessResponse)
+                    .map(AccessTokenResponse::getTokens)
+                    .map(Tokens::getAccessToken)
+                    .map(AccessToken::getLifetime)
+                    .ifPresentOrElse(
+                            lifetime -> LOG.info("Access token expires in {}", lifetime),
+                            () -> LOG.warn("No expiry on access token"));
 
             return tokenResponse.toSuccessResponse().getTokens().toOIDCTokens();
 
