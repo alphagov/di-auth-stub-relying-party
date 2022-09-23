@@ -98,6 +98,14 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(addressEntry);
             }
 
+            if (formParameters.containsKey("claims-driving-permit")) {
+                LOG.info("Driving permit claim requested");
+                var drivingPermitEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-driving-permit"))
+                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest = claimsSetRequest.add(drivingPermitEntry);
+            }
+
             String language = formParameters.get("lng");
 
             var opURL =
