@@ -2,8 +2,11 @@ package uk.gov.di.config;
 
 import io.pivotal.cfenv.core.CfEnv;
 
+import java.util.Optional;
+
 import static java.lang.System.getenv;
 import static java.text.MessageFormat.format;
+import static java.util.function.Predicate.not;
 
 public class RelyingPartyConfig {
 
@@ -19,6 +22,12 @@ public class RelyingPartyConfig {
 
     public static String clientPrivateKey() {
         return configValue("CLIENT_PRIVATE_KEY", "PRIVATE-KEY");
+    }
+
+    public static Optional<String> identitySigningPublicKey() {
+        return Optional.of(getenv())
+                .map(env -> env.get("IDENTITY_SIGNING_PUBLIC_KEY"))
+                .filter(not(String::isBlank));
     }
 
     public static String accountManagementUrl() {
