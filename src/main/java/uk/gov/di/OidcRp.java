@@ -8,6 +8,7 @@ import uk.gov.di.handlers.ErrorHandler;
 import uk.gov.di.handlers.HomeHandler;
 import uk.gov.di.handlers.SignOutHandler;
 import uk.gov.di.handlers.SignedOutHandler;
+import uk.gov.di.utils.CoreIdentityValidator;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.PrivateKeyReader;
 
@@ -36,7 +37,8 @@ public class OidcRp {
 
         var homeHandler = new HomeHandler();
         var authorizeHandler = new AuthorizeHandler(oidcClient);
-        var authCallbackHandler = new AuthCallbackHandler(oidcClient);
+        var authCallbackHandler =
+                new AuthCallbackHandler(oidcClient, CoreIdentityValidator.createValidator());
         var logoutHandler = new SignOutHandler(oidcClient);
         var signedOutHandler = new SignedOutHandler();
         var errorHandler = new ErrorHandler();

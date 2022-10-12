@@ -6,6 +6,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import uk.gov.di.config.RelyingPartyConfig;
+import uk.gov.di.utils.CoreIdentityValidator;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.ViewHelper;
 
@@ -17,10 +18,12 @@ public class AuthCallbackHandler implements Route {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthCallbackHandler.class);
 
-    private Oidc oidcClient;
+    private final Oidc oidcClient;
+    private final CoreIdentityValidator validator;
 
-    public AuthCallbackHandler(Oidc oidc) {
+    public AuthCallbackHandler(Oidc oidc, CoreIdentityValidator validator) {
         this.oidcClient = oidc;
+        this.validator = validator;
     }
 
     @Override
