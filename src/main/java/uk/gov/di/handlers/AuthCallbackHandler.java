@@ -6,6 +6,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import uk.gov.di.config.RelyingPartyConfig;
+import uk.gov.di.utils.CoreIdentityValidator;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.ViewHelper;
 
@@ -17,10 +18,12 @@ public class AuthCallbackHandler implements Route {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthCallbackHandler.class);
 
-    private Oidc oidcClient;
+    private final Oidc oidcClient;
+    private final CoreIdentityValidator validator;
 
-    public AuthCallbackHandler(Oidc oidc) {
+    public AuthCallbackHandler(Oidc oidc, CoreIdentityValidator validator) {
         this.oidcClient = oidc;
+        this.validator = validator;
     }
 
     @Override
@@ -44,10 +47,15 @@ public class AuthCallbackHandler implements Route {
             model.put("email", userInfo.getEmailAddress());
             model.put("phone_number", userInfo.getPhoneNumber());
 
-            var coreIdentityJWT = userInfo.getStringClaim("https://vocab.account.gov.uk/v1/coreIdentityJWT");
+            var coreIdentityJWT =
+                    userInfo.getStringClaim("https://vocab.account.gov.uk/v1/coreIdentityJWT");
             boolean coreIdentityClaimPresent = Objects.nonNull(coreIdentityJWT);
             model.put("core_identity_claim_present", coreIdentityClaimPresent);
             model.put("core_identity_claim", coreIdentityJWT);
+
+            if (coreIdentityClaimPresent) {
+                model.put("core_identity_claim_signature", validator.isValid(coreIdentityJWT));
+            }
 
             boolean addressClaimPresent =
                     Objects.nonNull(userInfo.getClaim("https://vocab.account.gov.uk/v1/address"));
