@@ -35,17 +35,6 @@ public class AuthorizeHandler implements Route {
             List<String> scopes = new ArrayList<>();
             scopes.add("openid");
 
-            if (RelyingPartyConfig.clientType().equals("app")) {
-                LOG.info("Doc Checking App journey initialized");
-                scopes.add("doc-checking-app");
-                var opURL =
-                        oidcClient.buildSecureAuthorizeRequest(
-                                RelyingPartyConfig.authCallbackUrl(), Scope.parse(scopes));
-                LOG.info("Redirecting to OP");
-                response.redirect(opURL);
-                return null;
-            }
-
             List<NameValuePair> pairs =
                     URLEncodedUtils.parse(request.body(), Charset.defaultCharset());
 
@@ -54,6 +43,21 @@ public class AuthorizeHandler implements Route {
                             .collect(
                                     Collectors.toMap(
                                             NameValuePair::getName, NameValuePair::getValue));
+
+            String language = formParameters.get("lng");
+
+            if (RelyingPartyConfig.clientType().equals("app")) {
+                LOG.info("Doc Checking App journey initialized");
+                scopes.add("doc-checking-app");
+                var opURL =
+                        oidcClient.buildSecureAuthorizeRequest(
+                                RelyingPartyConfig.authCallbackUrl(),
+                                Scope.parse(scopes),
+                                language);
+                LOG.info("Redirecting to OP");
+                response.redirect(opURL);
+                return null;
+            }
 
             if (formParameters.containsKey("scopes-email")) {
                 LOG.info("Email scope requested");
@@ -105,8 +109,6 @@ public class AuthorizeHandler implements Route {
                                 .withClaimRequirement(ClaimRequirement.ESSENTIAL);
                 claimsSetRequest = claimsSetRequest.add(drivingPermitEntry);
             }
-
-            String language = formParameters.get("lng");
 
             var opURL =
                     oidcClient.buildAuthorizeRequest(
