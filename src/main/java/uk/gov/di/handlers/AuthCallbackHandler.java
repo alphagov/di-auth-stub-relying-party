@@ -47,10 +47,15 @@ public class AuthCallbackHandler implements Route {
             model.put("email", userInfo.getEmailAddress());
             model.put("phone_number", userInfo.getPhoneNumber());
 
-            var coreIdentityJWT = userInfo.getStringClaim("https://vocab.account.gov.uk/v1/coreIdentityJWT");
+            var coreIdentityJWT =
+                    userInfo.getStringClaim("https://vocab.account.gov.uk/v1/coreIdentityJWT");
             boolean coreIdentityClaimPresent = Objects.nonNull(coreIdentityJWT);
             model.put("core_identity_claim_present", coreIdentityClaimPresent);
             model.put("core_identity_claim", coreIdentityJWT);
+
+            if (coreIdentityClaimPresent) {
+                model.put("core_identity_claim_signature", validator.isValid(coreIdentityJWT));
+            }
 
             boolean addressClaimPresent =
                     Objects.nonNull(userInfo.getClaim("https://vocab.account.gov.uk/v1/address"));
