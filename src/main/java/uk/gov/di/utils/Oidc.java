@@ -206,13 +206,13 @@ public class Oidc {
         return authorizationRequestBuilder.build().toURI().toString();
     }
 
-    public String buildSecureAuthorizeRequest(String callbackUrl, Scope scopes) {
+    public String buildSecureAuthorizeRequest(String callbackUrl, Scope scopes, String language) {
         LOG.info("Building secure Authorize Request");
         var authRequestBuilder =
                 new AuthorizationRequest.Builder(
                                 new ResponseType(ResponseType.Value.CODE),
                                 new ClientID(this.clientId))
-                        .requestObject(generateSignedJWT(scopes, callbackUrl))
+                        .requestObject(generateSignedJWT(scopes, callbackUrl, language))
                         .scope(new Scope(OIDCScopeValue.OPENID))
                         .endpointURI(this.providerMetadata.getAuthorizationEndpointURI());
 
@@ -271,7 +271,7 @@ public class Oidc {
         }
     }
 
-    private SignedJWT generateSignedJWT(Scope scopes, String callbackURL) {
+    private SignedJWT generateSignedJWT(Scope scopes, String callbackURL, String language) {
         var jwtClaimsSet =
                 new JWTClaimsSet.Builder()
                         .audience(this.providerMetadata.getAuthorizationEndpointURI().toString())
@@ -281,6 +281,7 @@ public class Oidc {
                         .claim("nonce", new Nonce().getValue())
                         .claim("client_id", this.clientId)
                         .claim("state", new State().getValue())
+                        .claim("ui_locales", language)
                         .issuer(this.clientId)
                         .build();
         var jwsHeader = new JWSHeader(JWSAlgorithm.RS512);
