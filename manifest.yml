@@ -17,3 +17,4 @@ applications:
       CLIENT_PRIVATE_KEY: ((client_private_key))
       CLIENT_TYPE: ((client_type))
       MY_ACCOUNT_URL: ((am_url))
+      IDENTITY_SIGNING_PUBLIC_KEY: ((identity_signing_public_key))
