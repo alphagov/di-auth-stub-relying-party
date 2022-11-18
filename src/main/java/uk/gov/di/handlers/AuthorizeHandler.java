@@ -71,6 +71,8 @@ public class AuthorizeHandler implements Route {
 
             String vtr = formParameters.get("2fa");
 
+            var prompt = formParameters.get("prompt");
+
             if (formParameters.containsKey("loc") && !formParameters.get("loc").isEmpty()) {
                 vtr = "%s.%s".formatted(formParameters.get("loc"), vtr);
                 LOG.info("VTR value selected: {}", vtr);
@@ -116,7 +118,8 @@ public class AuthorizeHandler implements Route {
                             vtr,
                             scopes,
                             claimsSetRequest,
-                            language);
+                            language,
+                            prompt);
 
             LOG.info("Redirecting to OP");
             response.redirect(opURL);
