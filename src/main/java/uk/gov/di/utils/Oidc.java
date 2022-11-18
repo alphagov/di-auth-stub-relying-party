@@ -27,6 +27,7 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCClaimsRequest;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
+import com.nimbusds.openid.connect.sdk.Prompt;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
@@ -171,11 +172,19 @@ public class Oidc {
             String vtr,
             List<String> scopes,
             ClaimsSetRequest claimsSetRequest,
-            String language)
+            String language,
+            String prompt)
             throws URISyntaxException {
         LOG.info("Building Authorize Request");
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
+        Prompt authRequestPrompt;
+        try {
+            authRequestPrompt = Prompt.parse(prompt);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse prompt", e);
+        }
+
         var authorizationRequestBuilder =
                 new AuthenticationRequest.Builder(
                                 new ResponseType(ResponseType.Value.CODE),
@@ -184,6 +193,7 @@ public class Oidc {
                                 new URI(callbackUrl))
                         .state(new State())
                         .nonce(new Nonce())
+                        .prompt(authRequestPrompt)
                         .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
                         .customParameter("vtr", jsonArray.toJSONString());
 
