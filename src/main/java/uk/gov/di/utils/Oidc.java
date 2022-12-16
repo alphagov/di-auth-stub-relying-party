@@ -196,7 +196,6 @@ public class Oidc {
                 LOG.error("Unable to parse language {}", language);
             }
         }
-        ;
 
         return authorizationRequestBuilder.build().toURI().toString();
     }
