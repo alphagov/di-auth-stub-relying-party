@@ -228,11 +228,10 @@ public class Oidc {
 
     public void validateIdToken(JWT idToken) throws MalformedURLException {
         LOG.info("Validating ID token");
-        var iss = new Issuer(this.providerMetadata.getIssuer());
         ResourceRetriever resourceRetriever = new DefaultResourceRetriever(30000, 30000);
         var idTokenValidator =
                 new IDTokenValidator(
-                        iss,
+                        this.providerMetadata.getIssuer(),
                         this.clientId,
                         RelyingPartyConfig.idTokenSigningAlgorithm(),
                         this.providerMetadata.getJWKSetURI().toURL(),
@@ -248,10 +247,9 @@ public class Oidc {
 
     public Optional<LogoutTokenClaimsSet> validateLogoutToken(JWT logoutToken) {
         try {
-            var iss = new Issuer(this.providerMetadata.getIssuer());
             var validator =
                     new LogoutTokenValidator(
-                            iss,
+                            this.providerMetadata.getIssuer(),
                             this.clientId,
                             RelyingPartyConfig.idTokenSigningAlgorithm(),
                             this.providerMetadata.getJWKSetURI().toURL(),
