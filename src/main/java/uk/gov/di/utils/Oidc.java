@@ -59,12 +59,12 @@ public class Oidc {
 
     private final OIDCProviderMetadata providerMetadata;
     private final String idpUrl;
-    private final String clientId;
+    private final ClientID clientId;
     private final PrivateKeyReader privateKeyReader;
 
     public Oidc(String baseUrl, String clientId, PrivateKeyReader privateKeyReader) {
         this.idpUrl = baseUrl;
-        this.clientId = clientId;
+        this.clientId = new ClientID(clientId);
         this.providerMetadata = loadProviderMetadata(baseUrl);
         this.privateKeyReader = privateKeyReader;
     }
@@ -112,7 +112,7 @@ public class Oidc {
             Date expiryDate = Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
             JWTAuthenticationClaimsSet claimsSet =
                     new JWTAuthenticationClaimsSet(
-                            new ClientID(this.clientId),
+                            this.clientId,
                             new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
             claimsSet.getExpirationTime().setTime(expiryDate.getTime());
             var privateKeyJWT =
@@ -177,7 +177,7 @@ public class Oidc {
                 new AuthenticationRequest.Builder(
                                 new ResponseType(ResponseType.Value.CODE),
                                 Scope.parse(scopes),
-                                new ClientID(this.clientId),
+                                this.clientId,
                                 new URI(callbackUrl))
                         .state(new State())
                         .nonce(new Nonce())
@@ -208,8 +208,7 @@ public class Oidc {
         LOG.info("Building secure Authorize Request");
         var authRequestBuilder =
                 new AuthorizationRequest.Builder(
-                                new ResponseType(ResponseType.Value.CODE),
-                                new ClientID(this.clientId))
+                                new ResponseType(ResponseType.Value.CODE), this.clientId)
                         .requestObject(generateSignedJWT(scopes, callbackUrl, language))
                         .scope(new Scope(OIDCScopeValue.OPENID))
                         .endpointURI(this.providerMetadata.getAuthorizationEndpointURI());
@@ -230,12 +229,11 @@ public class Oidc {
     public void validateIdToken(JWT idToken) throws MalformedURLException {
         LOG.info("Validating ID token");
         var iss = new Issuer(this.providerMetadata.getIssuer());
-        var clientID = new ClientID(this.clientId);
         ResourceRetriever resourceRetriever = new DefaultResourceRetriever(30000, 30000);
         var idTokenValidator =
                 new IDTokenValidator(
                         iss,
-                        clientID,
+                        this.clientId,
                         RelyingPartyConfig.idTokenSigningAlgorithm(),
                         this.providerMetadata.getJWKSetURI().toURL(),
                         resourceRetriever);
@@ -251,11 +249,10 @@ public class Oidc {
     public Optional<LogoutTokenClaimsSet> validateLogoutToken(JWT logoutToken) {
         try {
             var iss = new Issuer(this.providerMetadata.getIssuer());
-            var clientID = new ClientID(this.clientId);
             var validator =
                     new LogoutTokenValidator(
                             iss,
-                            clientID,
+                            this.clientId,
                             RelyingPartyConfig.idTokenSigningAlgorithm(),
                             this.providerMetadata.getJWKSetURI().toURL(),
                             new DefaultResourceRetriever(30000, 30000));
@@ -278,7 +275,7 @@ public class Oidc {
                         .claim("client_id", this.clientId)
                         .claim("state", new State().getValue())
                         .claim("ui_locales", language)
-                        .issuer(this.clientId)
+                        .issuer(this.clientId.getValue())
                         .build();
         var jwsHeader = new JWSHeader(JWSAlgorithm.RS512);
         var signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
