@@ -41,6 +41,7 @@ import net.minidev.json.JSONArray;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.config.RelyingPartyConfig;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -243,13 +244,12 @@ public class Oidc {
         LOG.info("Validating ID token");
         var iss = new Issuer(this.providerMetadata.getIssuer());
         var clientID = new ClientID(this.clientId);
-        var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
         ResourceRetriever resourceRetriever = new DefaultResourceRetriever(30000, 30000);
         var idTokenValidator =
                 new IDTokenValidator(
                         iss,
                         clientID,
-                        jwsAlg,
+                        RelyingPartyConfig.idTokenSigningAlgorithm(),
                         this.providerMetadata.getJWKSetURI().toURL(),
                         resourceRetriever);
 
@@ -265,12 +265,11 @@ public class Oidc {
         try {
             var iss = new Issuer(this.providerMetadata.getIssuer());
             var clientID = new ClientID(this.clientId);
-            var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
             var validator =
                     new LogoutTokenValidator(
                             iss,
                             clientID,
-                            jwsAlg,
+                            RelyingPartyConfig.idTokenSigningAlgorithm(),
                             this.providerMetadata.getJWKSetURI().toURL(),
                             new DefaultResourceRetriever(30000, 30000));
 

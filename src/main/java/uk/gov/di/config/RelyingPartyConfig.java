@@ -1,5 +1,6 @@
 package uk.gov.di.config;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import io.pivotal.cfenv.core.CfEnv;
 
 import java.util.Optional;
@@ -42,6 +43,10 @@ public class RelyingPartyConfig {
 
     public static String clientType() {
         return configValue("CLIENT_TYPE", "web");
+    }
+
+    public static JWSAlgorithm idTokenSigningAlgorithm() {
+        return JWSAlgorithm.parse(configValue("ID_TOKEN_SIGNING_ALGORITHM", "ES256"));
     }
 
     public static String serviceName() {
