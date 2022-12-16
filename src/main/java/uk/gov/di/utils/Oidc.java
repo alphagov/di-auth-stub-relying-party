@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -58,9 +57,6 @@ public class Oidc {
 
     private static final Logger LOG = LoggerFactory.getLogger(Oidc.class);
 
-    public static final String WELL_KNOWN_OPENID_CONFIGURATION =
-            "/.well-known/openid-configuration";
-
     private final OIDCProviderMetadata providerMetadata;
     private final String idpUrl;
     private final String clientId;
@@ -69,22 +65,13 @@ public class Oidc {
     public Oidc(String baseUrl, String clientId, PrivateKeyReader privateKeyReader) {
         this.idpUrl = baseUrl;
         this.clientId = clientId;
-        this.providerMetadata = loadProviderMetadata();
+        this.providerMetadata = loadProviderMetadata(baseUrl);
         this.privateKeyReader = privateKeyReader;
     }
 
-    private OIDCProviderMetadata loadProviderMetadata() {
+    private OIDCProviderMetadata loadProviderMetadata(String baseUrl) {
         try {
-            var base = new URL(this.idpUrl);
-            var providerConfigurationURL = new URL(base + WELL_KNOWN_OPENID_CONFIGURATION);
-            var stream = providerConfigurationURL.openStream();
-
-            String providerInfo;
-            try (java.util.Scanner s = new java.util.Scanner(stream)) {
-                providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
-            }
-
-            return OIDCProviderMetadata.parse(providerInfo);
+            return OIDCProviderMetadata.resolve(new Issuer(baseUrl));
         } catch (Exception e) {
             LOG.error("Unexpected exception thrown when loading provider metadata", e);
             throw new RuntimeException(e);
