@@ -115,14 +115,11 @@ public class Oidc {
                             this.clientId,
                             new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
             claimsSet.getExpirationTime().setTime(expiryDate.getTime());
-            var privateKeyJWT =
-                    new PrivateKeyJWT(
-                            claimsSet, JWSAlgorithm.RS512, privateKeyReader.get(), null, null);
 
             var request =
                     new TokenRequest(
                             this.providerMetadata.getTokenEndpointURI(),
-                            privateKeyJWT,
+                            new PrivateKeyJWT(signJwtWithClaims(claimsSet.toJWTClaimsSet())),
                             codeGrant,
                             null,
                             null,
@@ -149,7 +146,7 @@ public class Oidc {
 
             return tokenResponse.toSuccessResponse().getTokens().toOIDCTokens();
 
-        } catch (JOSEException | ParseException | IOException e) {
+        } catch (ParseException | IOException e) {
             LOG.error("Unexpected exception thrown when making token request", e);
             throw new RuntimeException(e);
         }
@@ -275,15 +272,19 @@ public class Oidc {
                         .claim("ui_locales", language)
                         .issuer(this.clientId.getValue())
                         .build();
-        var jwsHeader = new JWSHeader(JWSAlgorithm.RS512);
-        var signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
-        var signer = new RSASSASigner(this.privateKeyReader.get());
+        return signJwtWithClaims(jwtClaimsSet);
+    }
+
+    private SignedJWT signJwtWithClaims(JWTClaimsSet jwtClaimsSet) {
+        var signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.RS512), jwtClaimsSet);
+
         try {
-            signedJWT.sign(signer);
+            signedJWT.sign(new RSASSASigner(this.privateKeyReader.get()));
         } catch (JOSEException e) {
             LOG.error("Unable to sign secure request object", e);
             throw new RuntimeException("Unable to sign secure request object", e);
         }
+
         return signedJWT;
     }
 }
