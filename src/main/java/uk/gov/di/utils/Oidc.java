@@ -41,12 +41,12 @@ import net.minidev.json.JSONArray;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.config.RelyingPartyConfig;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -57,33 +57,21 @@ public class Oidc {
 
     private static final Logger LOG = LoggerFactory.getLogger(Oidc.class);
 
-    public static final String WELL_KNOWN_OPENID_CONFIGURATION =
-            "/.well-known/openid-configuration";
-
     private final OIDCProviderMetadata providerMetadata;
     private final String idpUrl;
-    private final String clientId;
+    private final ClientID clientId;
     private final PrivateKeyReader privateKeyReader;
 
     public Oidc(String baseUrl, String clientId, PrivateKeyReader privateKeyReader) {
         this.idpUrl = baseUrl;
-        this.clientId = clientId;
-        this.providerMetadata = loadProviderMetadata();
+        this.clientId = new ClientID(clientId);
+        this.providerMetadata = loadProviderMetadata(baseUrl);
         this.privateKeyReader = privateKeyReader;
     }
 
-    private OIDCProviderMetadata loadProviderMetadata() {
+    private OIDCProviderMetadata loadProviderMetadata(String baseUrl) {
         try {
-            var base = new URL(this.idpUrl);
-            var providerConfigurationURL = new URL(base + WELL_KNOWN_OPENID_CONFIGURATION);
-            var stream = providerConfigurationURL.openStream();
-
-            String providerInfo;
-            try (java.util.Scanner s = new java.util.Scanner(stream)) {
-                providerInfo = s.useDelimiter("\\A").hasNext() ? s.next() : "";
-            }
-
-            return OIDCProviderMetadata.parse(providerInfo);
+            return OIDCProviderMetadata.resolve(new Issuer(baseUrl));
         } catch (Exception e) {
             LOG.error("Unexpected exception thrown when loading provider metadata", e);
             throw new RuntimeException(e);
@@ -124,17 +112,14 @@ public class Oidc {
             Date expiryDate = Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
             JWTAuthenticationClaimsSet claimsSet =
                     new JWTAuthenticationClaimsSet(
-                            new ClientID(this.clientId),
+                            this.clientId,
                             new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
             claimsSet.getExpirationTime().setTime(expiryDate.getTime());
-            var privateKeyJWT =
-                    new PrivateKeyJWT(
-                            claimsSet, JWSAlgorithm.RS512, privateKeyReader.get(), null, null);
 
             var request =
                     new TokenRequest(
                             this.providerMetadata.getTokenEndpointURI(),
-                            privateKeyJWT,
+                            new PrivateKeyJWT(signJwtWithClaims(claimsSet.toJWTClaimsSet())),
                             codeGrant,
                             null,
                             null,
@@ -161,7 +146,7 @@ public class Oidc {
 
             return tokenResponse.toSuccessResponse().getTokens().toOIDCTokens();
 
-        } catch (JOSEException | ParseException | IOException e) {
+        } catch (ParseException | IOException e) {
             LOG.error("Unexpected exception thrown when making token request", e);
             throw new RuntimeException(e);
         }
@@ -189,7 +174,7 @@ public class Oidc {
                 new AuthenticationRequest.Builder(
                                 new ResponseType(ResponseType.Value.CODE),
                                 Scope.parse(scopes),
-                                new ClientID(this.clientId),
+                                this.clientId,
                                 new URI(callbackUrl))
                         .state(new State())
                         .nonce(new Nonce())
@@ -211,7 +196,6 @@ public class Oidc {
                 LOG.error("Unable to parse language {}", language);
             }
         }
-        ;
 
         return authorizationRequestBuilder.build().toURI().toString();
     }
@@ -220,8 +204,7 @@ public class Oidc {
         LOG.info("Building secure Authorize Request");
         var authRequestBuilder =
                 new AuthorizationRequest.Builder(
-                                new ResponseType(ResponseType.Value.CODE),
-                                new ClientID(this.clientId))
+                                new ResponseType(ResponseType.Value.CODE), this.clientId)
                         .requestObject(generateSignedJWT(scopes, callbackUrl, language))
                         .scope(new Scope(OIDCScopeValue.OPENID))
                         .endpointURI(this.providerMetadata.getAuthorizationEndpointURI());
@@ -241,15 +224,12 @@ public class Oidc {
 
     public void validateIdToken(JWT idToken) throws MalformedURLException {
         LOG.info("Validating ID token");
-        var iss = new Issuer(this.providerMetadata.getIssuer());
-        var clientID = new ClientID(this.clientId);
-        var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
         ResourceRetriever resourceRetriever = new DefaultResourceRetriever(30000, 30000);
         var idTokenValidator =
                 new IDTokenValidator(
-                        iss,
-                        clientID,
-                        jwsAlg,
+                        this.providerMetadata.getIssuer(),
+                        this.clientId,
+                        RelyingPartyConfig.idTokenSigningAlgorithm(),
                         this.providerMetadata.getJWKSetURI().toURL(),
                         resourceRetriever);
 
@@ -263,14 +243,11 @@ public class Oidc {
 
     public Optional<LogoutTokenClaimsSet> validateLogoutToken(JWT logoutToken) {
         try {
-            var iss = new Issuer(this.providerMetadata.getIssuer());
-            var clientID = new ClientID(this.clientId);
-            var jwsAlg = this.providerMetadata.getIDTokenJWSAlgs().get(0);
             var validator =
                     new LogoutTokenValidator(
-                            iss,
-                            clientID,
-                            jwsAlg,
+                            this.providerMetadata.getIssuer(),
+                            this.clientId,
+                            RelyingPartyConfig.idTokenSigningAlgorithm(),
                             this.providerMetadata.getJWKSetURI().toURL(),
                             new DefaultResourceRetriever(30000, 30000));
 
@@ -292,17 +269,21 @@ public class Oidc {
                         .claim("client_id", this.clientId)
                         .claim("state", new State().getValue())
                         .claim("ui_locales", language)
-                        .issuer(this.clientId)
+                        .issuer(this.clientId.getValue())
                         .build();
-        var jwsHeader = new JWSHeader(JWSAlgorithm.RS512);
-        var signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
-        var signer = new RSASSASigner(this.privateKeyReader.get());
+        return signJwtWithClaims(jwtClaimsSet);
+    }
+
+    private SignedJWT signJwtWithClaims(JWTClaimsSet jwtClaimsSet) {
+        var signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.RS512), jwtClaimsSet);
+
         try {
-            signedJWT.sign(signer);
+            signedJWT.sign(new RSASSASigner(this.privateKeyReader.get()));
         } catch (JOSEException e) {
             LOG.error("Unable to sign secure request object", e);
             throw new RuntimeException("Unable to sign secure request object", e);
         }
+
         return signedJWT;
     }
 }
