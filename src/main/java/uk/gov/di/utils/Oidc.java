@@ -214,7 +214,9 @@ public class Oidc {
 
     public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri)
             throws URISyntaxException {
-        var logoutUri = new URIBuilder(this.idpUrl + "/logout");
+        var logoutUri =
+                new URIBuilder(this.idpUrl + (this.idpUrl.endsWith("/") ? "logout" : "/logout"));
+        System.out.println(logoutUri);
         logoutUri.addParameter("id_token_hint", idToken);
         logoutUri.addParameter("state", state);
         logoutUri.addParameter("post_logout_redirect_uri", postLogoutRedirectUri);
