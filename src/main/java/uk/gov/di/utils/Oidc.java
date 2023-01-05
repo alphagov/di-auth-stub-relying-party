@@ -214,13 +214,14 @@ public class Oidc {
 
     public String buildLogoutUrl(String idToken, String state, String postLogoutRedirectUri)
             throws URISyntaxException {
-        return new URIBuilder()
-                .setHost(this.idpUrl)
-                .setPath("logout")
-                .addParameter("id_token_hint", idToken)
-                .addParameter("state", state)
-                .addParameter("post_logout_redirect_uri", postLogoutRedirectUri)
-                .toString();
+        var logoutUri =
+                new URIBuilder(this.idpUrl + (this.idpUrl.endsWith("/") ? "logout" : "/logout"));
+        System.out.println(logoutUri);
+        logoutUri.addParameter("id_token_hint", idToken);
+        logoutUri.addParameter("state", state);
+        logoutUri.addParameter("post_logout_redirect_uri", postLogoutRedirectUri);
+
+        return logoutUri.build().toString();
     }
 
     public void validateIdToken(JWT idToken) throws MalformedURLException {
