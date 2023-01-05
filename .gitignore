@@ -8,3 +8,8 @@ example-clients/python/app/__pycache__
 .env
 .java-version
 out/
+logs/
+.classpath
+.project
+.settings/
+bin/
