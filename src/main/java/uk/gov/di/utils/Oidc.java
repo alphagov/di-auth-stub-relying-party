@@ -268,7 +268,7 @@ public class Oidc {
                         .claim("response_type", ResponseType.CODE.toString())
                         .claim("scope", scopes.toString())
                         .claim("nonce", new Nonce().getValue())
-                        .claim("client_id", this.clientId)
+                        .claim("client_id", this.clientId.getValue())
                         .claim("state", new State().getValue())
                         .claim("ui_locales", language)
                         .issuer(this.clientId.getValue())
