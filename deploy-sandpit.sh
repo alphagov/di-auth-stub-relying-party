@@ -60,6 +60,7 @@ app_name: ${CLIENT_NAME}
 service_name: "Sample Service - Sandpit"
 client_type: WEB
 environment_name: sandpit
+identity_signing_public_key: anykey
 EOF
 popd > /dev/null
 echo "done!"
