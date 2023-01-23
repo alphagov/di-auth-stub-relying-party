@@ -19,6 +19,7 @@ import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
@@ -263,6 +264,7 @@ public class Oidc {
         var jwtClaimsSet =
                 new JWTClaimsSet.Builder()
                         .audience(this.providerMetadata.getAuthorizationEndpointURI().toString())
+                        .subject(new Subject().getValue())
                         .claim("redirect_uri", callbackURL)
                         .claim("response_type", ResponseType.CODE.toString())
                         .claim("scope", scopes.toString())
