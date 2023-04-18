@@ -2,7 +2,7 @@
 applications:
   - name: ((app_name))
     path: build/distributions/di-auth-stub-relying-party.zip
-    memory: 1G
+    memory: 512M
     buildpacks:
       - https://github.com/cloudfoundry/java-buildpack.git#v4.48.3
     command: cd di-auth-stub-relying-party && bin/di-auth-stub-relying-party
