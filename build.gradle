@@ -27,7 +27,7 @@ repositories {
 dependencies {
     implementation "com.sparkjava:spark-core:2.9.3",
             "com.sparkjava:spark-template-mustache:2.7.1",
-            "com.nimbusds:oauth2-oidc-sdk:9.37.2",
+            "com.nimbusds:oauth2-oidc-sdk:10.11",
             "org.slf4j:slf4j-simple:1.7.36",
             "org.apache.httpcomponents:httpclient:4.5.13",
             "io.pivotal.cfenv:java-cfenv:2.4.0",
