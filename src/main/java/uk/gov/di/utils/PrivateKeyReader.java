@@ -12,15 +12,17 @@ import java.util.regex.Pattern;
 public class PrivateKeyReader {
     private String privateKey;
 
-    public PrivateKeyReader(String privateKey){
+    public PrivateKeyReader(String privateKey) {
         this.privateKey = privateKey;
     }
+
     public RSAPrivateKey get() {
-        try{
+        try {
             var kf = KeyFactory.getInstance("RSA");
-            return (RSAPrivateKey)kf.generatePrivate(new PKCS8EncodedKeySpec(format(this.privateKey)));
-        }catch (InvalidKeySpecException | IOException | NoSuchAlgorithmException e) {
-           throw new RuntimeException(e);
+            return (RSAPrivateKey)
+                    kf.generatePrivate(new PKCS8EncodedKeySpec(format(this.privateKey)));
+        } catch (InvalidKeySpecException | IOException | NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 
