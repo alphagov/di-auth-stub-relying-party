@@ -10,6 +10,7 @@ buildscript {
 
 plugins {
     id "com.diffplug.spotless" version "6.11.0"
+    id "org.sonarqube" version "4.2.1.3168"
 }
 
 apply plugin: 'java'
@@ -42,8 +43,6 @@ dependencies {
 }
 
 spotless {
-    ratchetFrom 'origin/main'
-
     java {
         target "**/*.java"
         googleJavaFormat("1.13.0").aosp()
@@ -53,6 +52,14 @@ spotless {
     groovyGradle {
         target "**/*.gradle"
         greclipse().configFile("tools/spotless-gradle.properties")
+    }
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "alphagov_di-auth-stub-relying-party"
+        property "sonar.organization", "alphagov"
+        property "sonar.host.url", "https://sonarcloud.io"
     }
 }
 
