@@ -112,6 +112,14 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(drivingPermitEntry);
             }
 
+            if (formParameters.containsKey("claims-social-security-record")) {
+                LOG.info("Social security record claim requested");
+                var socialSecurityRecordEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-social-security-record"))
+                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest = claimsSetRequest.add(socialSecurityRecordEntry);
+            }
+
             var opURL =
                     oidcClient.buildAuthorizeRequest(
                             RelyingPartyConfig.authCallbackUrl(),
