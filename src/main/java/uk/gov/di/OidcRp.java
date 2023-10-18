@@ -6,6 +6,7 @@ import uk.gov.di.handlers.AuthorizeHandler;
 import uk.gov.di.handlers.BackChannelLogoutHandler;
 import uk.gov.di.handlers.ErrorHandler;
 import uk.gov.di.handlers.HomeHandler;
+import uk.gov.di.handlers.PostHandler;
 import uk.gov.di.handlers.SignOutHandler;
 import uk.gov.di.handlers.SignedOutHandler;
 import uk.gov.di.utils.CoreIdentityValidator;
@@ -42,9 +43,10 @@ public class OidcRp {
         var logoutHandler = new SignOutHandler(oidcClient);
         var signedOutHandler = new SignedOutHandler();
         var errorHandler = new ErrorHandler();
+        var postHandler = new PostHandler(oidcClient);
 
         get("/", homeHandler);
-
+        get("/post-page", postHandler);
         path(
                 "/oidc",
                 () -> {

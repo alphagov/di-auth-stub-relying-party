@@ -130,8 +130,17 @@ public class AuthorizeHandler implements Route {
                             language,
                             prompt);
 
+            if (formParameters.containsKey("method")) {
+                if (formParameters.get("method").equals("post")) {
+                    var s = opURL.toURI().toString();
+                    response.redirect(
+                            "http://0.0.0.0:8081/post-page" + s.substring(s.indexOf("?")));
+                    return null;
+                }
+            }
+
             LOG.info("Redirecting to OP");
-            response.redirect(opURL);
+            response.redirect(opURL.toURI().toString());
             return null;
 
         } catch (Exception ex) {
