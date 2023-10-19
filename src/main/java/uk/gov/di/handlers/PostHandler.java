@@ -19,13 +19,14 @@ public class PostHandler implements Route {
     public PostHandler(Oidc oidc) {
         this.oidcClient = oidc;
     }
+
     @Override
     public Object handle(Request request, Response response) {
         request.session(true);
 
         var model = new HashMap<>();
         model.put("servicename", RelyingPartyConfig.serviceName());
-        model.put("endpoint_address", "https://oidc.sandpit.account.gov.uk/authorize");
+        model.put("endpoint_address", oidcClient.getAuthorizationEndpoint());
         request.queryParams()
                 .forEach(
                         (i) -> {

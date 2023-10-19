@@ -201,6 +201,10 @@ public class Oidc {
         return authorizationRequestBuilder.build();
     }
 
+    public String getAuthorizationEndpoint() {
+        return this.providerMetadata.getAuthorizationEndpointURI().toString();
+    }
+
     public String buildSecureAuthorizeRequest(String callbackUrl, Scope scopes, String language) {
         LOG.info("Building secure Authorize Request");
         var authRequestBuilder =
