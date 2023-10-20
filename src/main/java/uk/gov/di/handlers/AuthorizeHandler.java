@@ -23,7 +23,7 @@ public class AuthorizeHandler implements Route {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthorizeHandler.class);
 
-    private Oidc oidcClient;
+    private final Oidc oidcClient;
 
     public AuthorizeHandler(Oidc oidc) {
         this.oidcClient = oidc;
@@ -130,13 +130,10 @@ public class AuthorizeHandler implements Route {
                             language,
                             prompt);
 
-            if (formParameters.containsKey("method")) {
-                if (formParameters.get("method").equals("post")) {
-                    var s = opURL.toURI().toString();
-                    response.redirect(
-                            "http://0.0.0.0:8081/post-page" + s.substring(s.indexOf("?")));
-                    return null;
-                }
+            if (formParameters.containsKey("method")
+                    && formParameters.get("method").equals("post")) {
+                response.redirect(String.format("/post-page?%s", opURL.toQueryString()));
+                return null;
             }
 
             LOG.info("Redirecting to OP");

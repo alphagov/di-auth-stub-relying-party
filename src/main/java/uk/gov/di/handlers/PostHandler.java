@@ -14,7 +14,7 @@ import java.util.HashMap;
 public class PostHandler implements Route {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostHandler.class);
-    private Oidc oidcClient;
+    private final Oidc oidcClient;
 
     public PostHandler(Oidc oidc) {
         this.oidcClient = oidc;
@@ -27,11 +27,7 @@ public class PostHandler implements Route {
         var model = new HashMap<>();
         model.put("servicename", RelyingPartyConfig.serviceName());
         model.put("endpoint_address", oidcClient.getAuthorizationEndpoint());
-        request.queryParams()
-                .forEach(
-                        (i) -> {
-                            model.putIfAbsent(i, request.queryParams(i));
-                        });
+        request.queryParams().forEach(i -> model.putIfAbsent(i, request.queryParams(i)));
 
         LOG.info(
                 "Rendering RP with serviceName: {} and clientType: {}",
