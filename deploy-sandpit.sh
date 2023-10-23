@@ -41,6 +41,7 @@ done
 pushd "${DIR}" > /dev/null
 
 echo "Building deployment..."
+./gradlew :spotlessApply
 ./gradlew ${CLEAN} build distZip
 
 echo -n "Getting AWS credentials ... "
