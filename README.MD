@@ -15,7 +15,25 @@ export OP_BASE_URL="https://oidc.sandpit.account.gov.uk/";
 ## Deploy To Sandpit
 **This is due to be moved to aws. It is difficult to deploy as PaaS is EOL.**
 
-To deploy to the sandpit enviroment, you will need access to the PaaS service (see [here](https://docs.cloud.service.gov.uk/get_started.html#enable-single-sign-on)).
+To deploy to the sandpit enviroment, you will need access to the PaaS service. You should then enable SSO (see [here](https://docs.cloud.service.gov.uk/get_started.html#enable-single-sign-on)).
 
 You also need cloud foundry (cf) locally setup.
 `brew install cloudfoundry/tap/cf-cli@8`
+
+You first login using:
+```
+cf login -a api.london.cloud.service.gov.uk --sso
+```
+
+Then choose sandpit:
+```
+Select a space:
+1. build
+2. integration
+3. production
+4. sandbox
+5. sandpit
+6. staging
+```
+
+Next execute `./deploy-sandpit.sh`

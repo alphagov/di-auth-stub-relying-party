@@ -12,9 +12,11 @@ import spark.Response;
 import spark.Route;
 import uk.gov.di.config.RelyingPartyConfig;
 import uk.gov.di.utils.Oidc;
+import uk.gov.di.utils.ViewHelper;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -132,8 +134,16 @@ public class AuthorizeHandler implements Route {
 
             if (formParameters.containsKey("method")
                     && formParameters.get("method").equals("post")) {
-                response.redirect(String.format("/post-page?%s", opURL.toQueryString()));
-                return null;
+                var model = new HashMap<>();
+                model.put("servicename", RelyingPartyConfig.serviceName());
+                model.put("endpoint_address", oidcClient.getAuthorizationEndpoint());
+                opURL.toParameters()
+                        .forEach(
+                                (key, value) ->
+                                        model.putIfAbsent(
+                                                key,
+                                                value.stream().count() > 1 ? value : value.get(0)));
+                return ViewHelper.render(model, "post-page.mustache");
             }
 
             LOG.info("Redirecting to OP");
