@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-./gradlew :spotlessApply
-
 echo "Building DI authentication Stub relying party"
 ./gradlew clean build
 

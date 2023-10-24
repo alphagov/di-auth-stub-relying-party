@@ -153,7 +153,7 @@ public class Oidc {
         }
     }
 
-    public AuthenticationRequest buildAuthorizeRequest(
+    public String buildAuthorizeRequest(
             String callbackUrl,
             String vtr,
             List<String> scopes,
@@ -198,11 +198,7 @@ public class Oidc {
             }
         }
 
-        return authorizationRequestBuilder.build();
-    }
-
-    public String getAuthorizationEndpoint() {
-        return this.providerMetadata.getAuthorizationEndpointURI().toString();
+        return authorizationRequestBuilder.build().toURI().toString();
     }
 
     public String buildSecureAuthorizeRequest(String callbackUrl, Scope scopes, String language) {

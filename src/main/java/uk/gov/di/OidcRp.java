@@ -44,6 +44,7 @@ public class OidcRp {
         var errorHandler = new ErrorHandler();
 
         get("/", homeHandler);
+
         path(
                 "/oidc",
                 () -> {

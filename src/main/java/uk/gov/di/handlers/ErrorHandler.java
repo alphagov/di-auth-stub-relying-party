@@ -22,7 +22,6 @@ public class ErrorHandler implements Route {
         var model = new HashMap<>();
         model.put("error", request.queryParams("error"));
         model.put("error_description", request.queryParams("error_description"));
-        response.header("Server", "govuk-sign-in-stub-rp");
         return ViewHelper.render(model, "error.mustache");
     }
 }
