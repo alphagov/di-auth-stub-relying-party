@@ -11,6 +11,7 @@ import uk.gov.di.handlers.SignedOutHandler;
 import uk.gov.di.utils.CoreIdentityValidator;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.PrivateKeyReader;
+import uk.gov.di.utils.ResponseHeaderHelper;
 
 import static spark.Spark.after;
 import static spark.Spark.get;
@@ -57,6 +58,6 @@ public class OidcRp {
 
         internalServerError(errorHandler);
 
-        after("/*", (req, res) -> res.header("Server", "govuk-sign-in-stub-rp"));
+        after("/*", (req, res) -> ResponseHeaderHelper.setHeaders(res));
     }
 }
