@@ -195,7 +195,7 @@ public class Oidc {
         }
 
         return new AuthenticationRequest.Builder(
-                        ResponseType.CODE, Scope.parse(scopes), this.clientId, new URI(callbackUrl))
+                        ResponseType.CODE, Scope.parse(scopes), this.clientId, null)
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
                 .requestObject(signJwtWithClaims(requestObject.build()))
                 .build();
