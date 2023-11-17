@@ -123,6 +123,20 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(socialSecurityRecordEntry);
             }
 
+            if ("object".equals(formParameters.getOrDefault("request", "query"))) {
+                LOG.info("Using signed request object for /authorize request");
+                var redirectUrl =
+                        oidcClient.buildJarAuthorizeRequest(
+                                RelyingPartyConfig.authCallbackUrl(),
+                                vtr,
+                                scopes,
+                                claimsSetRequest,
+                                language,
+                                prompt);
+                response.redirect(redirectUrl.toURI().toString());
+                return null;
+            }
+
             var opURL =
                     oidcClient.buildQueryParamAuthorizeRequest(
                             RelyingPartyConfig.authCallbackUrl(),
