@@ -124,7 +124,7 @@ public class AuthorizeHandler implements Route {
             }
 
             var opURL =
-                    oidcClient.buildAuthorizeRequest(
+                    oidcClient.buildQueryParamAuthorizeRequest(
                             RelyingPartyConfig.authCallbackUrl(),
                             vtr,
                             scopes,

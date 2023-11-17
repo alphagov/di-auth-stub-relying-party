@@ -153,7 +153,7 @@ public class Oidc {
         }
     }
 
-    public AuthenticationRequest buildAuthorizeRequest(
+    public AuthenticationRequest buildQueryParamAuthorizeRequest(
             String callbackUrl,
             String vtr,
             List<String> scopes,
