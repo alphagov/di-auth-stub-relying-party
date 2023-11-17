@@ -153,6 +153,54 @@ public class Oidc {
         }
     }
 
+    public AuthenticationRequest buildJarAuthorizeRequest(
+            String callbackUrl,
+            String vtr,
+            List<String> scopes,
+            ClaimsSetRequest claimsSetRequest,
+            String language,
+            String prompt)
+            throws URISyntaxException {
+        LOG.info("Building JAR Authorize Request");
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.add(vtr);
+        Prompt authRequestPrompt;
+        try {
+            authRequestPrompt = Prompt.parse(prompt);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse prompt", e);
+        }
+
+        var requestObject =
+                new JWTClaimsSet.Builder()
+                        .audience(this.providerMetadata.getAuthorizationEndpointURI().toString())
+                        .claim("redirect_uri", callbackUrl)
+                        .claim("response_type", ResponseType.CODE.toString())
+                        .claim("scope", Scope.parse(scopes).toString())
+                        .claim("nonce", new Nonce().getValue())
+                        .claim("client_id", this.clientId.getValue())
+                        .claim("state", new State().getValue())
+                        .claim("vtr", jsonArray.toJSONString())
+                        .claim("claims", claimsSetRequest.toJSONString())
+                        .claim("prompt", authRequestPrompt.toString())
+                        .issuer(this.clientId.getValue());
+
+        if (!language.isBlank()) {
+            try {
+                LOG.info("Adding ui_locales to Authorize Request {}", language);
+                requestObject.claim("ui_locales", List.of(LangTag.parse(language)));
+            } catch (LangTagException e) {
+                LOG.error("Unable to parse language {}", language);
+            }
+        }
+
+        return new AuthenticationRequest.Builder(
+                        ResponseType.CODE, Scope.parse(scopes), this.clientId, new URI(callbackUrl))
+                .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
+                .requestObject(signJwtWithClaims(requestObject.build()))
+                .build();
+    }
+
     public AuthenticationRequest buildQueryParamAuthorizeRequest(
             String callbackUrl,
             String vtr,
