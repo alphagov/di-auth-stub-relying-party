@@ -52,7 +52,7 @@ public class AuthorizeHandler implements Route {
                 LOG.info("Doc Checking App journey initialized");
                 scopes.add("doc-checking-app");
                 var opURL =
-                        oidcClient.buildSecureAuthorizeRequest(
+                        oidcClient.buildDocAppAuthorizeRequest(
                                 RelyingPartyConfig.authCallbackUrl(),
                                 Scope.parse(scopes),
                                 language);
