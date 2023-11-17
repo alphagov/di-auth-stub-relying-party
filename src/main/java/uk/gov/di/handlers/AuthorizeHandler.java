@@ -1,6 +1,7 @@
 package uk.gov.di.handlers;
 
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import org.apache.http.NameValuePair;
@@ -14,6 +15,7 @@ import uk.gov.di.config.RelyingPartyConfig;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.ViewHelper;
 
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -123,35 +125,17 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(socialSecurityRecordEntry);
             }
 
-            if ("object".equals(formParameters.getOrDefault("request", "query"))) {
-                LOG.info("Using signed request object for /authorize request");
-                var redirectUrl =
-                        oidcClient.buildJarAuthorizeRequest(
-                                RelyingPartyConfig.authCallbackUrl(),
-                                vtr,
-                                scopes,
-                                claimsSetRequest,
-                                language,
-                                prompt);
-                response.redirect(redirectUrl.toURI().toString());
-                return null;
-            }
-
-            var opURL =
-                    oidcClient.buildQueryParamAuthorizeRequest(
-                            RelyingPartyConfig.authCallbackUrl(),
-                            vtr,
-                            scopes,
-                            claimsSetRequest,
-                            language,
-                            prompt);
+            var authRequest =
+                    buildAuthorizeRequest(
+                            formParameters, vtr, scopes, claimsSetRequest, language, prompt);
 
             if (formParameters.containsKey("method")
                     && formParameters.get("method").equals("post")) {
                 var model = new HashMap<>();
                 model.put("servicename", RelyingPartyConfig.serviceName());
                 model.put("endpoint_address", oidcClient.getAuthorizationEndpoint());
-                opURL.toParameters()
+                authRequest
+                        .toParameters()
                         .forEach(
                                 (key, value) ->
                                         model.putIfAbsent(
@@ -161,11 +145,40 @@ public class AuthorizeHandler implements Route {
             }
 
             LOG.info("Redirecting to OP");
-            response.redirect(opURL.toURI().toString());
+            response.redirect(authRequest.toURI().toString());
             return null;
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private AuthenticationRequest buildAuthorizeRequest(
+            Map<String, String> formParameters,
+            String vtr,
+            List<String> scopes,
+            ClaimsSetRequest claimsSetRequest,
+            String language,
+            String prompt)
+            throws URISyntaxException {
+        if ("object".equals(formParameters.getOrDefault("request", "query"))) {
+            LOG.info("Building authorize request with JAR");
+            return oidcClient.buildJarAuthorizeRequest(
+                    RelyingPartyConfig.authCallbackUrl(),
+                    vtr,
+                    scopes,
+                    claimsSetRequest,
+                    language,
+                    prompt);
+        } else {
+            LOG.info("Building authorize request with query params");
+            return oidcClient.buildQueryParamAuthorizeRequest(
+                    RelyingPartyConfig.authCallbackUrl(),
+                    vtr,
+                    scopes,
+                    claimsSetRequest,
+                    language,
+                    prompt);
         }
     }
 }
