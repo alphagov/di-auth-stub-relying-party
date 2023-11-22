@@ -13,3 +13,4 @@ logs/
 .project
 .settings/
 bin/
+*.pem
