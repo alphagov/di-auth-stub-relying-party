@@ -180,7 +180,7 @@ public class Oidc {
                         .claim("nonce", new Nonce().getValue())
                         .claim("client_id", this.clientId.getValue())
                         .claim("state", new State().getValue())
-                        .claim("vtr", jsonArray.toJSONString())
+                        .claim("vtr", jsonArray)
                         .claim("claims", claimsSetRequest.toJSONString())
                         .claim("prompt", authRequestPrompt.toString())
                         .issuer(this.clientId.getValue());
