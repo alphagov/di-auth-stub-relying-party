@@ -12,6 +12,8 @@ export OP_BASE_URL="https://oidc.sandpit.account.gov.uk/";
 ./startup.sh
 ```
 
+It will be accessible on port 8081.
+
 ## Deploy To Sandpit
 **This is due to be moved to aws. It is difficult to deploy as PaaS is EOL.**
 
