@@ -255,27 +255,43 @@
                 </div>
 
                 <div class="govuk-grid-column-one-quarter govuk-form-group">
-                    <fieldset class="govuk-fieldset">
-                        <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-                            <h3 class="govuk-fieldset__heading">
-                                HTTP METHOD
-                            </h3>
-                        </legend>
-                        <div class="govuk-radios">
-                            <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="method-get" name="method" type="radio" value="get" checked>
-                                <label class="govuk-label govuk-radios__label" for="method-get">
-                                    GET
-                                </label>
+                    <div class="govuk-grid-row">
+                        <fieldset class="govuk-fieldset">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                                <h3 class="govuk-fieldset__heading">
+                                    HTTP METHOD
+                                </h3>
+                            </legend>
+                            <div class="govuk-radios">
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="method-get" name="method" type="radio"
+                                           value="get" checked>
+                                    <label class="govuk-label govuk-radios__label" for="method-get">
+                                        GET
+                                    </label>
+                                </div>
+                                <div class="govuk-radios__item">
+                                    <input class="govuk-radios__input" id="method-post" name="method" type="radio"
+                                           value="post">
+                                    <label class="govuk-label govuk-radios__label" for="method-post">
+                                        POST
+                                    </label>
+                                </div>
                             </div>
-                            <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="method-post" name="method" type="radio" value="post">
-                                <label class="govuk-label govuk-radios__label" for="method-post">
-                                    POST
-                                </label>
-                            </div>
-                        </div>
-                    </fieldset>
+                        </fieldset>
+                    </div>
+                    <div class="govuk-grid-row">
+                        <fieldset class="govuk-fieldset govuk-!-margin-top-6">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                                <h3 class="govuk-fieldset__heading">
+                                    <label class="govuk-label govuk-label--m" for="rp-sid">
+                                        RP Session ID (rp_sid)
+                                    </label>
+                                </h3>
+                            </legend>
+                            <input class="govuk-input" id="rp-sid" name="rp-sid" type="text">
+                        </fieldset>
+                    </div>
                 </div>
                 <div class="govuk-grid-column-one-quarter govuk-form-group">
                     <fieldset class="govuk-fieldset">

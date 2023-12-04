@@ -159,8 +159,8 @@ public class Oidc {
             List<String> scopes,
             ClaimsSetRequest claimsSetRequest,
             String language,
-            String prompt)
-            throws URISyntaxException {
+            String prompt,
+            String rpSid) {
         LOG.info("Building JAR Authorize Request");
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
@@ -194,6 +194,10 @@ public class Oidc {
             }
         }
 
+        if (rpSid != null && !rpSid.isBlank()) {
+            requestObject.claim("rp_sid", rpSid);
+        }
+
         return new AuthenticationRequest.Builder(
                         ResponseType.CODE, Scope.parse(scopes), this.clientId, null)
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
@@ -207,7 +211,8 @@ public class Oidc {
             List<String> scopes,
             ClaimsSetRequest claimsSetRequest,
             String language,
-            String prompt)
+            String prompt,
+            String rpSid)
             throws URISyntaxException {
         LOG.info("Building Authorize Request");
         JSONArray jsonArray = new JSONArray();
@@ -244,6 +249,10 @@ public class Oidc {
             } catch (LangTagException e) {
                 LOG.error("Unable to parse language {}", language);
             }
+        }
+
+        if (rpSid != null && !rpSid.isBlank()) {
+            authorizationRequestBuilder.customParameter("rp_sid", rpSid);
         }
 
         return authorizationRequestBuilder.build();
