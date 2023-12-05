@@ -1,6 +1,12 @@
-FROM gradle:jdk16@sha256:d31e12d105e332ec2ef1f31c20eac6d1467295487ac70e534e3c1d0ae4a0506e AS build
-COPY --chown=gradle:gradle . /home/gradle/src
+FROM gradle:7.6.3-jdk17 AS build
 WORKDIR /home/gradle/src
+
+COPY --chown=gradle:gradle gradlew build.gradle ./
+COPY --chown=gradle:gradle gradle gradle
+COPY --chown=gradle:gradle tools tools
+RUN gradle clean build --no-daemon
+
+COPY --chown=gradle:gradle src src
 RUN gradle clean build --no-daemon
 
 ENTRYPOINT ["gradle", "run"]
