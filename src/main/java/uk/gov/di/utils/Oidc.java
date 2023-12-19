@@ -159,17 +159,12 @@ public class Oidc {
             List<String> scopes,
             ClaimsSetRequest claimsSetRequest,
             String language,
-            String prompt,
-            String rpSid) {
+            boolean requestReauth,
+            String rpSid,
+            String idToken) {
         LOG.info("Building JAR Authorize Request");
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
-        Prompt authRequestPrompt;
-        try {
-            authRequestPrompt = Prompt.parse(prompt);
-        } catch (ParseException e) {
-            throw new RuntimeException("Unable to parse prompt", e);
-        }
 
         var requestObject =
                 new JWTClaimsSet.Builder()
@@ -182,7 +177,6 @@ public class Oidc {
                         .claim("state", new State().getValue())
                         .claim("vtr", jsonArray)
                         .claim("claims", claimsSetRequest.toJSONString())
-                        .claim("prompt", authRequestPrompt.toString())
                         .issuer(this.clientId.getValue());
 
         if (!language.isBlank()) {
@@ -198,6 +192,14 @@ public class Oidc {
             requestObject.claim("rp_sid", rpSid);
         }
 
+        if (requestReauth && idToken != null && !idToken.isBlank()) {
+            requestObject.claim("id_token_hint", idToken);
+        }
+
+        if (requestReauth) {
+            requestObject.claim("prompt", Prompt.Type.LOGIN.toString());
+        }
+
         return new AuthenticationRequest.Builder(
                         ResponseType.CODE, Scope.parse(scopes), this.clientId, null)
                 .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
@@ -211,18 +213,11 @@ public class Oidc {
             List<String> scopes,
             ClaimsSetRequest claimsSetRequest,
             String language,
-            String prompt,
             String rpSid)
             throws URISyntaxException {
         LOG.info("Building Authorize Request");
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
-        Prompt authRequestPrompt;
-        try {
-            authRequestPrompt = Prompt.parse(prompt);
-        } catch (ParseException e) {
-            throw new RuntimeException("Unable to parse prompt", e);
-        }
 
         var authorizationRequestBuilder =
                 new AuthenticationRequest.Builder(
@@ -232,7 +227,6 @@ public class Oidc {
                                 new URI(callbackUrl))
                         .state(new State())
                         .nonce(new Nonce())
-                        .prompt(authRequestPrompt)
                         .endpointURI(this.providerMetadata.getAuthorizationEndpointURI())
                         .customParameter("vtr", jsonArray.toJSONString());
 
