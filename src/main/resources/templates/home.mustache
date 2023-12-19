@@ -87,23 +87,31 @@
                     <fieldset class="govuk-fieldset">
                         <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
                             <h3 class="govuk-fieldset__heading">
-                                Prompt
+                                Request reauthentication (JAR requests only)
                             </h3>
                         </legend>
                         <div class="govuk-radios">
                             <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="prompt-none" name="prompt" type="radio" value="none" checked>
-                                <label class="govuk-label govuk-radios__label" for="prompt-none">
-                                    none
+                                <input class="govuk-radios__input" id="reauth-false" name="reauth" type="radio" value="false" checked>
+                                <label class="govuk-label govuk-radios__label" for="reauth-false">
+                                    No
                                 </label>
                             </div>
                             <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="prompt-login" name="prompt" type="radio" value="login">
-                                <label class="govuk-label govuk-radios__label" for="prompt-login">
-                                    login
+                                <input class="govuk-radios__input" id="reauth-true" name="reauth" type="radio" value="true">
+                                <label class="govuk-label govuk-radios__label" for="reauth-true">
+                                    Yes
                                 </label>
                             </div>
                         </div>
+                        <legend class="govuk-fieldset__legend govuk-fieldset__legend--m govuk-!-margin-top-6">
+                            <h3 class="govuk-fieldset__heading">
+                                <label class="govuk-label govuk-label--m" for="reauth-id-token">
+                                    ID token for reauthentication
+                                </label>
+                            </h3>
+                        </legend>
+                        <input class="govuk-input" id="reauth-id-token" name="reauth-id-token" type="text">
                     </fieldset>
                 </div>
                 <div class="govuk-grid-column-one-quarter govuk-form-group">
