@@ -75,7 +75,7 @@ public class AuthorizeHandler implements Route {
 
             String vtr = formParameters.get("2fa");
 
-            var requestReauth = formParameters.get("reauth").equals("true");
+            var prompt = formParameters.get("prompt");
 
             String rpSid = formParameters.get("rp-sid");
 
@@ -136,7 +136,7 @@ public class AuthorizeHandler implements Route {
                             scopes,
                             claimsSetRequest,
                             language,
-                            requestReauth,
+                            prompt,
                             rpSid,
                             idToken);
 
@@ -170,7 +170,7 @@ public class AuthorizeHandler implements Route {
             List<String> scopes,
             ClaimsSetRequest claimsSetRequest,
             String language,
-            boolean requestReauth,
+            String prompt,
             String rpSid,
             String idToken)
             throws URISyntaxException {
@@ -182,7 +182,7 @@ public class AuthorizeHandler implements Route {
                     scopes,
                     claimsSetRequest,
                     language,
-                    requestReauth,
+                    prompt,
                     rpSid,
                     idToken);
         } else {
@@ -193,6 +193,7 @@ public class AuthorizeHandler implements Route {
                     scopes,
                     claimsSetRequest,
                     language,
+                    prompt,
                     rpSid);
         }
     }
