@@ -127,6 +127,14 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(socialSecurityRecordEntry);
             }
 
+            if (formParameters.containsKey("claims-return-code")) {
+                LOG.info("Return code claim requested");
+                var returnCodeEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-return-code"))
+                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest = claimsSetRequest.add(returnCodeEntry);
+            }
+
             var authRequest =
                     buildAuthorizeRequest(
                             formParameters, vtr, scopes, claimsSetRequest, language, prompt, rpSid);
