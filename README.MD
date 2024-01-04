@@ -4,13 +4,12 @@
 This stub allows you to set various paramaters (see [here]("https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/")) and mock calls from an RP.
 
 ## Local Setup
-You will need to have the `di-authentication-api` repo locally (In the same parent directory by default)
+You'll need to set up environment variables to run locally. Make a copy of the `.env.template` file, and rename it `.env`.
+The stub is currently set up to connect to the build environment (as sandpit blocks requests from localhost). Once you 
+have a copy of `.env`, you'll need to go into the `build-client-registry` table in DynamoDB, and find the client with ClientName `di-auth-stub-relying-party-build`.
+Update the value of `CLIENT_ID` to the ClientID of this client.
 
-To run the stub locally, and make calls to sandpit (defined by `OP_BASE_URL`) you can run:
-```shell
-export OP_BASE_URL="https://oidc.sandpit.account.gov.uk/";
-./startup.sh
-```
+To run the stub locally, run `docker compose up`.
 
 It will be accessible on port 8081.
 

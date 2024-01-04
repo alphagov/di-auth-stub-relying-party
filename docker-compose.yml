@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  auth-rp-stub:
+    container_name: di-auth-stub-relying-party_auth-rp-stub
+    ports:
+      - "8081:8081"
+    build:
+      context: .
+    env_file:
+      - .env
+    restart: on-failure
