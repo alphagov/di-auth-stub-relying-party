@@ -14,5 +14,9 @@
   {
     "Key": "Owner",
     "Value": "di-orchestration@digital.cabinet-office.gov.uk"
+  },
+  {
+    "Key": "Source",
+    "Value": "alphagov/di-auth-stub-relying-party"
   }
 ]
