@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "AllowedAccounts",
+    "ParameterValue": "388905755587"
+  },
+  {
+    "ParameterKey": "ContainerSignerKmsKeyArn",
+    "ParameterValue": "arn:aws:kms:eu-west-2:616199614141:key/d0d44be9-b8c2-4bff-b3d0-9c03b0273350"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "build"
+  },
+  {
+    "ParameterKey": "GitHubRepositoryName",
+    "ParameterValue": "di-auth-stub-relying-party"
+  },
+  {
+    "ParameterKey": "SAMStackName",
+    "ParameterValue": "build-rp-stub-pipeline"
+  },
+  {
+    "ParameterKey": "SigningProfileArn",
+    "ParameterValue": "none"
+  },
+  {
+    "ParameterKey": "SigningProfileVersionArn",
+    "ParameterValue": "none"
+  },
+  {
+    "ParameterKey": "VpcStackName",
+    "ParameterValue": "vpc"
+  }
+]

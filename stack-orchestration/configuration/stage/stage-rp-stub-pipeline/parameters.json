@@ -1,0 +1,42 @@
+[
+  {
+    "ParameterKey": "AllowedAccounts",
+    "ParameterValue": "388905755587"
+  },
+  {
+    "ParameterKey": "ArtifactSourceBucketArn",
+    "ParameterValue": "arn:aws:s3:::build-rp-stub-pipeline-artifactpromotionbucket-dv4oktcnb4te"
+  },
+  {
+    "ParameterKey": "ArtifactSourceBucketEventTriggerRoleArn",
+    "ParameterValue": "arn:aws:iam::616199614141:role/PL-build-rp-stub-pipeline-PromoTrigRole-021a9f716eca"
+  },
+  {
+    "ParameterKey": "ContainerSignerKmsKeyArn",
+    "ParameterValue": "arn:aws:kms:eu-west-2:616199614141:key/d0d44be9-b8c2-4bff-b3d0-9c03b0273350"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "staging"
+  },
+  {
+    "ParameterKey": "IncludePromotion",
+    "ParameterValue": "Yes"
+  },
+  {
+    "ParameterKey": "SAMStackName",
+    "ParameterValue": "stage-rp-stub-pipeline"
+  },
+  {
+    "ParameterKey": "SigningProfileArn",
+    "ParameterValue": "none"
+  },
+  {
+    "ParameterKey": "SigningProfileVersionArn",
+    "ParameterValue": "none"
+  },
+  {
+    "ParameterKey": "VpcStackName",
+    "ParameterValue": "vpc"
+  }
+]

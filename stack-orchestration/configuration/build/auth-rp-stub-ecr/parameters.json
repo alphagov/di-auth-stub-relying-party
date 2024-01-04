@@ -1,0 +1,6 @@
+[
+  {
+    "ParameterKey": "PipelineStackName",
+    "ParameterValue": "build-rp-stub-pipeline"
+  }
+]
