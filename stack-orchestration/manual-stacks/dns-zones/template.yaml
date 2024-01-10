@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  All the DNS Hosted Zones for the Orchestration Stubs.
+Parameters:
+  Environment:
+    Description: The name of the environment to deploy to
+    Type: String
+    AllowedValues:
+      - dev
+      - build
+      - staging
+      - integration
+      - production
+
+Conditions:
+  IsProduction: !Equals [ !Ref Environment, production]
+
+Mappings:
+  EnvironmentConfiguration:
+    dev:
+      domainName: auth-rp-dev.build.stubs.account.gov.uk
+    build:
+      domainName: auth-rp-build.build.stubs.account.gov.uk
+    staging:
+      domainName: auth-rp-staging.build.stubs.account.gov.uk
+    integration:
+      domainName: auth-rp-integration.build.stubs.account.gov.uk
+    production:
+      domainName: auth-rp.stubs.account.gov.uk
+
+Resources:
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+      DomainValidationOptions:
+        - DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+          HostedZoneId: !If
+            - IsProduction
+            - !ImportValue RootPublicHostedZoneId
+            - !ImportValue BuildPublicHostedZoneId
+      ValidationMethod: DNS
+      CertificateTransparencyLoggingPreference: ENABLED
+
+Outputs:
+  CertificateArn:
+    Value: !Ref Certificate
+    Export:
+      Name: CertificateArn
