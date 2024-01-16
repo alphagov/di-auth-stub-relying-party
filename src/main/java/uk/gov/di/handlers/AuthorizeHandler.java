@@ -135,6 +135,22 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(returnCodeEntry);
             }
 
+            if (formParameters.containsKey("claims-inherited-identity")) {
+                if (!formParameters.get("claims-inherited-identity").trim().isEmpty()) {
+                    LOG.info("Inherited Identity record claim requested");
+                    var inheritedIdentityEntry =
+                            new ClaimsSetRequest.Entry(
+                                            "https://vocab.account.gov.uk/v1/inheritedIdentityJWT")
+                                    .withValues(
+                                            List.of(
+                                                    formParameters.get(
+                                                            "claims-inherited-identity")));
+                    claimsSetRequest = claimsSetRequest.add(inheritedIdentityEntry);
+                } else {
+                    claimsSetRequest.delete("claims-inherited-identity");
+                }
+            }
+
             var authRequest =
                     buildAuthorizeRequest(
                             formParameters, vtr, scopes, claimsSetRequest, language, prompt, rpSid);
