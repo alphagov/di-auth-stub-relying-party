@@ -7,6 +7,9 @@ COPY --chown=gradle:gradle tools tools
 RUN gradle clean build --no-daemon
 
 COPY --chown=gradle:gradle src src
-RUN gradle clean build --no-daemon
+RUN gradle clean build installDist --no-daemon
 
-ENTRYPOINT ["gradle", "run"]
+FROM amazoncorretto:17.0.8-alpine3.17 as runtime
+COPY --from=build /home/gradle/src/build/install/src .
+
+ENTRYPOINT ["bin/src"]
