@@ -1,5 +1,3 @@
-import org.gradle.api.JavaVersion
-
 buildscript {
     repositories {
         maven {
@@ -81,12 +79,6 @@ run {
             environment key, value
         }
     }
-}
-
-task zipRouteService(type: Zip) {
-    from 'nginx/'
-    include '*'
-    archiveName 'di-auth-stub-rp-route-service.zip'
 }
 
 mainClassName = 'uk.gov.di.App'
