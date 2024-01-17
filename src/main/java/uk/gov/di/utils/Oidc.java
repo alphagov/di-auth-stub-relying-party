@@ -160,7 +160,8 @@ public class Oidc {
             ClaimsSetRequest claimsSetRequest,
             String language,
             String prompt,
-            String rpSid) {
+            String rpSid,
+            String idToken) {
         LOG.info("Building JAR Authorize Request");
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(vtr);
@@ -196,6 +197,10 @@ public class Oidc {
 
         if (rpSid != null && !rpSid.isBlank()) {
             requestObject.claim("rp_sid", rpSid);
+        }
+
+        if (idToken != null && !idToken.isBlank()) {
+            requestObject.claim("id_token_hint", idToken);
         }
 
         return new AuthenticationRequest.Builder(
