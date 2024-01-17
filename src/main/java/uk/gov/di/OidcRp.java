@@ -24,7 +24,7 @@ import static spark.Spark.staticFileLocation;
 public class OidcRp {
     public OidcRp() {
         staticFileLocation("/public");
-        port(RelyingPartyConfig.getCloudfoundryPort());
+        port(8080);
 
         initRoutes();
     }
