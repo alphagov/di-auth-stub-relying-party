@@ -11,7 +11,7 @@ Update the value of `CLIENT_ID` to the ClientID of this client.
 
 To run the stub locally, run `docker compose up`.
 
-It will be accessible on port 8081.
+It will be accessible on port 8080.
 
 ## Deploy To Sandpit
 **This is due to be moved to aws. It is difficult to deploy as PaaS is EOL.**

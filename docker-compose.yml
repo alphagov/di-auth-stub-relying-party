@@ -4,7 +4,7 @@ services:
   auth-rp-stub:
     container_name: di-auth-stub-relying-party_auth-rp-stub
     ports:
-      - "8081:8081"
+      - "8080:8080"
     build:
       context: .
     env_file:
