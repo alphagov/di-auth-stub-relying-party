@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import uk.gov.di.config.GovUkOneLoginClaims;
 import uk.gov.di.config.RelyingPartyConfig;
 import uk.gov.di.utils.Oidc;
 import uk.gov.di.utils.ViewHelper;
@@ -90,43 +91,27 @@ public class AuthorizeHandler implements Route {
 
             if (formParameters.containsKey("claims-core-identity")) {
                 LOG.info("Core Identity claim requested");
-                var identityEntry =
-                        new ClaimsSetRequest.Entry(formParameters.get("claims-core-identity"))
-                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest = claimsSetRequest.add(identityEntry);
+                claimsSetRequest.add(GovUkOneLoginClaims.CORE_IDENTITY.asEntry());
             }
 
             if (formParameters.containsKey("claims-passport")) {
                 LOG.info("Passport claim requested");
-                var passportEntry =
-                        new ClaimsSetRequest.Entry(formParameters.get("claims-passport"))
-                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest = claimsSetRequest.add(passportEntry);
+                claimsSetRequest.add(GovUkOneLoginClaims.PASSPORT.asEntry());
             }
 
             if (formParameters.containsKey("claims-address")) {
                 LOG.info("Address claim requested");
-                var addressEntry =
-                        new ClaimsSetRequest.Entry(formParameters.get("claims-address"))
-                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest = claimsSetRequest.add(addressEntry);
+                claimsSetRequest.add(GovUkOneLoginClaims.ADDRESS.asEntry());
             }
 
             if (formParameters.containsKey("claims-driving-permit")) {
                 LOG.info("Driving permit claim requested");
-                var drivingPermitEntry =
-                        new ClaimsSetRequest.Entry(formParameters.get("claims-driving-permit"))
-                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest = claimsSetRequest.add(drivingPermitEntry);
+                claimsSetRequest.add(GovUkOneLoginClaims.DRIVING_PERMIT.asEntry());
             }
 
             if (formParameters.containsKey("claims-social-security-record")) {
                 LOG.info("Social security record claim requested");
-                var socialSecurityRecordEntry =
-                        new ClaimsSetRequest.Entry(
-                                        formParameters.get("claims-social-security-record"))
-                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest = claimsSetRequest.add(socialSecurityRecordEntry);
+                claimsSetRequest.add(GovUkOneLoginClaims.SOCIAL_SECURITY_RECORD.asEntry());
             }
 
             if (formParameters.containsKey("claims-return-code")) {
