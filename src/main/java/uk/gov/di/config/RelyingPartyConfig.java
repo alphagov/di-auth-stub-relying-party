@@ -54,7 +54,7 @@ public class RelyingPartyConfig {
     }
 
     public static String oidcProviderUrl() {
-        return configValue("OP_BASE_URL", "https://oidc.build.account.gov.uk/");
+        return configValue("OP_BASE_URL", "https://oidc.build.account.gov.uk");
     }
 
     public static String getCloudFoundryUri() {

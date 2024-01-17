@@ -21,13 +21,13 @@ Conditions:
 Mappings:
   EnvironmentConfiguration:
     build:
-      baseUrl: "https://oidc.build.account.gov.uk/"
+      opBaseUrl: "https://oidc.build.account.gov.uk/"
     staging:
-      baseUrl: "https://oidc.staging.account.gov.uk/"
+      opBaseUrl: "https://oidc.staging.account.gov.uk/"
     integration:
-      baseUrl: "https://oidc.integration.account.gov.uk/"
+      opBaseUrl: "https://oidc.integration.account.gov.uk/"
     production:
-      baseUrl: "https://oidc.account.gov.uk/"
+      opBaseUrl: "https://oidc.account.gov.uk/"
 
 Resources:
   #
@@ -46,6 +46,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   ContainerService:
     Type: AWS::ECS::Service
@@ -74,6 +76,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
     DependsOn: ApplicationLoadBalancerListener
 
   ContainerServiceSecurityGroup:
@@ -108,25 +112,13 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
-
-  DocAppFargateCluster:
-    Type: AWS::ECS::Cluster
-    Properties:
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppFargateCluster"
-        - Key: Service
-          Value: Relying Party Doc App stub
-        - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppContainerService:
     Type: AWS::ECS::Service
     Properties:
-      Cluster: !Ref DocAppFargateCluster
+      Cluster: !Ref FargateCluster
       TaskDefinition: !Ref DocAppTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
@@ -150,6 +142,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
     DependsOn: DocAppApplicationLoadBalancerListener
 
   DocAppContainerServiceSecurityGroup:
@@ -184,6 +178,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   #
   # Fargate tasks
@@ -207,7 +203,7 @@ Resources:
               awslogs-stream-prefix: "ecs"
           Environment:
             - Name: OP_BASE_URL
-              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, baseUrl ]
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
             - Name: CLIENT_TYPE
               Value: web
       Cpu: 256
@@ -223,6 +219,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   TaskLogGroup:
     Type: AWS::Logs::LogGroup
@@ -251,6 +249,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -270,7 +270,7 @@ Resources:
               awslogs-stream-prefix: "ecs"
           Environment:
             - Name: OP_BASE_URL
-              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, baseUrl ]
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
             - Name: CLIENT_TYPE
               Value: app
       Cpu: 256
@@ -286,6 +286,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppTaskLogGroup:
     Type: AWS::Logs::LogGroup
@@ -314,6 +316,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   #
   # Load balancing
@@ -338,6 +342,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   ApplicationLoadBalancerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -364,6 +370,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   ApplicationLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -421,6 +429,8 @@ Resources:
           Value: Relying Party stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   ApplicationLoadBalancerSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -463,6 +473,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppApplicationLoadBalancerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -489,6 +501,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppApplicationLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -546,6 +560,8 @@ Resources:
           Value: Relying Party Doc App stub
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppApplicationLoadBalancerSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -582,6 +598,7 @@ Resources:
         Service: Relying Party stub
         Name: !Sub "${AWS::StackName}-ApiGateway"
         Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
 
   ApiGatewayIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -614,6 +631,7 @@ Resources:
         Service: Relying Party stub
         Name: !Sub "${AWS::StackName}-ApiDefaultStage"
         Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
       AccessLogSettings:
         DestinationArn: !GetAtt ApiGatewayAccessLogsGroup.Arn
         Format:
@@ -692,6 +710,8 @@ Resources:
         Value: Relying Party stub
       - Key: Source
         Value: alphagov/di-auth-stub-relying-party
+      - Key: Owner
+        Value: di-orchestration@digital.cabinet-office.gov.uk
 
   ApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
@@ -737,6 +757,7 @@ Resources:
         Service: Relying Party Doc App stub
         Name: !Sub "${AWS::StackName}-DocAppApiGateway"
         Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppApiGatewayIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -769,6 +790,7 @@ Resources:
         Service: Relying Party Doc App stub
         Name: !Sub "${AWS::StackName}-DocAppApiDefaultStage"
         Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
       AccessLogSettings:
         DestinationArn: !GetAtt DocAppApiGatewayAccessLogsGroup.Arn
         Format:
@@ -847,6 +869,8 @@ Resources:
         Value: Relying Party Doc App stub
       - Key: Source
         Value: alphagov/di-auth-stub-relying-party
+      - Key: Owner
+        Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
@@ -920,6 +944,8 @@ Resources:
           Value: !Sub "${AWS::StackName}-KmsKey"
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppKmsKey:
     Type: AWS::KMS::Key
@@ -954,3 +980,5 @@ Resources:
           Value: !Sub "${AWS::StackName}-DocAppKmsKey"
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
