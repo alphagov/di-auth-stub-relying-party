@@ -93,32 +93,26 @@ public class AuthorizeHandler implements Route {
             final var claimsSetRequest = new ClaimsSetRequest();
 
             if (formParameters.containsKey("claims-core-identity")) {
-                LOG.info("Core Identity claim requested");
                 claimsSetRequest.add(GovUkOneLoginClaims.CORE_IDENTITY.asEntry());
             }
 
             if (formParameters.containsKey("claims-passport")) {
-                LOG.info("Passport claim requested");
                 claimsSetRequest.add(GovUkOneLoginClaims.PASSPORT.asEntry());
             }
 
             if (formParameters.containsKey("claims-address")) {
-                LOG.info("Address claim requested");
                 claimsSetRequest.add(GovUkOneLoginClaims.ADDRESS.asEntry());
             }
 
             if (formParameters.containsKey("claims-driving-permit")) {
-                LOG.info("Driving permit claim requested");
                 claimsSetRequest.add(GovUkOneLoginClaims.DRIVING_PERMIT.asEntry());
             }
 
             if (formParameters.containsKey("claims-social-security-record")) {
-                LOG.info("Social security record claim requested");
                 claimsSetRequest.add(GovUkOneLoginClaims.SOCIAL_SECURITY_RECORD.asEntry());
             }
 
             if (formParameters.containsKey("claims-return-code")) {
-                LOG.info("Return code claim requested");
                 claimsSetRequest.add(GovUkOneLoginClaims.RETURN_CODE.asEntry());
             }
 
