@@ -2,7 +2,7 @@
 
 ## Setup
 
-Clone the repo https://github.com/alphagov/di-devplatform-deploy in a directory next to this repo.
+Clone the repo https://github.com/govuk-one-login/devplatform-deploy in a directory next to this repo.
 
 ### Required CLIs
 

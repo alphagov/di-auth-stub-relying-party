@@ -13,7 +13,11 @@
   },
   {
     "ParameterKey": "GitHubRepositoryName",
-    "ParameterValue": "di-auth-stub-relying-party"
+    "ParameterValue": "none"
+  },
+  {
+    "ParameterKey": "OneLoginRepositoryName",
+    "ParameterValue": "relying-party-stub"
   },
   {
     "ParameterKey": "SAMStackName",
