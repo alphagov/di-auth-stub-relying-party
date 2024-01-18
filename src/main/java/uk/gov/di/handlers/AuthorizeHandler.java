@@ -2,7 +2,6 @@ package uk.gov.di.handlers;
 
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSetRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -19,10 +18,14 @@ import uk.gov.di.utils.ViewHelper;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static java.util.function.Predicate.not;
 
 public class AuthorizeHandler implements Route {
 
@@ -87,7 +90,7 @@ public class AuthorizeHandler implements Route {
                 LOG.info("VTR value selected: {}", vtr);
             }
 
-            var claimsSetRequest = new ClaimsSetRequest();
+            final var claimsSetRequest = new ClaimsSetRequest();
 
             if (formParameters.containsKey("claims-core-identity")) {
                 LOG.info("Core Identity claim requested");
@@ -116,27 +119,15 @@ public class AuthorizeHandler implements Route {
 
             if (formParameters.containsKey("claims-return-code")) {
                 LOG.info("Return code claim requested");
-                var returnCodeEntry =
-                        new ClaimsSetRequest.Entry(formParameters.get("claims-return-code"))
-                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
-                claimsSetRequest = claimsSetRequest.add(returnCodeEntry);
+                claimsSetRequest.add(GovUkOneLoginClaims.RETURN_CODE.asEntry());
             }
 
-            if (formParameters.containsKey("claims-inherited-identity")) {
-                if (!formParameters.get("claims-inherited-identity").trim().isEmpty()) {
-                    LOG.info("Inherited Identity record claim requested");
-                    var inheritedIdentityEntry =
-                            new ClaimsSetRequest.Entry(
-                                            "https://vocab.account.gov.uk/v1/inheritedIdentityJWT")
-                                    .withValues(
-                                            List.of(
-                                                    formParameters.get(
-                                                            "claims-inherited-identity")));
-                    claimsSetRequest = claimsSetRequest.add(inheritedIdentityEntry);
-                } else {
-                    claimsSetRequest.delete("claims-inherited-identity");
-                }
-            }
+            Optional.ofNullable(formParameters.get("claims-inherited-identity"))
+                    .map(String::trim)
+                    .filter(not(String::isEmpty))
+                    .map(Collections::singletonList)
+                    .map(GovUkOneLoginClaims.INHERITED_IDENTITY.asEntry()::withValues)
+                    .ifPresent(claimsSetRequest::add);
 
             var authRequest =
                     buildAuthorizeRequest(
