@@ -13,10 +13,25 @@ Parameters:
   Environment:
     Description: "Environment the infrastructure is deployed to"
     Type: "String"
+  PermissionsBoundary:
+    Type: String
+    Description: >
+      The ARN of the permissions boundary to apply to any role created by the template
+    Default: "none"
 
 Conditions:
-  IsProd:
-    !Equals [ production, !Ref Environment]
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+
+Globals:
+  Function:
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
 
 Mappings:
   EnvironmentConfiguration:
@@ -242,6 +257,10 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-TaskExecutionRole"
@@ -309,6 +328,10 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-DocAppTaskExecutionRole"
