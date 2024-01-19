@@ -190,7 +190,7 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: !Sub "${AWS::StackName}-ECSServiceTaskDefinition"
-          Image: CONTAINER-IMAGE-PLACEHOLDER
+          Image: 616199614141.dkr.ecr.eu-west-2.amazonaws.com/auth-rp-stub-ecr-containerrepository-3sskx3yrhvk5:test
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
@@ -226,7 +226,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/ecs/${AWS::StackName}"
-      RetentionInDays: 1
+      RetentionInDays: 90
       KmsKeyId: !GetAtt KmsKey.Arn
 
   TaskExecutionRole:
@@ -257,7 +257,7 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: !Sub "${AWS::StackName}-DocAppECSServiceTaskDefinition"
-          Image: CONTAINER-IMAGE-PLACEHOLDER
+          Image: 616199614141.dkr.ecr.eu-west-2.amazonaws.com/auth-rp-stub-ecr-containerrepository-3sskx3yrhvk5:test
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
@@ -293,7 +293,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/ecs/${AWS::StackName}DocApp"
-      RetentionInDays: 1
+      RetentionInDays: 90
       KmsKeyId: !GetAtt DocAppKmsKey.Arn
 
   DocAppTaskExecutionRole:
@@ -355,7 +355,7 @@ Resources:
       Protocol: HTTP
       ProtocolVersion: HTTP1
       Matcher:
-        HttpCode: "200-499"
+        HttpCode: 200
       TargetType: ip
       UnhealthyThresholdCount: 2
       VpcId:
@@ -486,7 +486,7 @@ Resources:
       Protocol: HTTP
       ProtocolVersion: HTTP1
       Matcher:
-        HttpCode: "200-499"
+        HttpCode: 200
       TargetType: ip
       UnhealthyThresholdCount: 2
       VpcId:
@@ -637,7 +637,7 @@ Resources:
         Format:
           Fn::ToJsonString:
             requestId: $context.requestId
-            ip: $context.identity.sourceIp
+            ip: $context.http.sourceIp
             requestTime: $context.requestTime
             httpMethod: $context.httpMethod
             path: $context.path"
@@ -718,7 +718,9 @@ Resources:
     Properties:
       Name: !Sub "${AWS::StackName}-ApiGatewayAuthorizer"
       ApiId: !Ref ApiGateway
-      AuthorizerResultTtlInSeconds: 0
+      AuthorizerResultTtlInSeconds: 60
+      IdentitySource:
+        - $context.http.sourceIp
       AuthorizerType: REQUEST
       AuthorizerPayloadFormatVersion: 2.0
       EnableSimpleResponses: true
@@ -796,7 +798,7 @@ Resources:
         Format:
           Fn::ToJsonString:
             requestId: $context.requestId
-            ip: $context.identity.sourceIp
+            ip: $context.http.sourceIp
             requestTime: $context.requestTime
             httpMethod: $context.httpMethod
             path: $context.path"
@@ -817,67 +819,14 @@ Resources:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-DocAppApiGatewayAccessLogsGroup
       RetentionInDays: 90
 
-  DocAppApiGatewayLambdaFunctionAuthorizer:
-    Type: AWS::Serverless::Function
-    Properties:
-      # checkov:skip=CKV_AWS_116: DLQ not required
-      # checkov:skip=CKV_AWS_117: Internet access not required
-      ReservedConcurrentExecutions: 1
-      Handler: index.handler
-      MemorySize: 128
-      Runtime: nodejs20.x
-      Timeout: 900
-      InlineCode: |
-        'use strict';
-  
-        const ip4ToInt = ip =>
-          ip.split('.').reduce((int, oct) => (int << 8) + parseInt(oct, 10), 0) >>> 0;
-        
-        const isIp4InCidr = ip => cidr => {
-          const [range, bits = 32] = cidr.split('/');
-          const mask = ~(2 ** (32 - bits) - 1);
-          return mask === 0
-            ? ip4ToInt(ip) === ip4ToInt(range)
-            : (ip4ToInt(ip) & mask) === (ip4ToInt(range) & mask);
-        };
-        
-        const isIp4InCidrs = (ip, cidrs) => cidrs.some(isIp4InCidr(ip));
-        
-        exports.handler = async(event) => {
-          const ipAddress = event.requestContext.http.sourceIp;
-          const validIps = [
-            '217.196.229.77/32',
-            '217.196.229.79/32',
-            '217.196.229.80/31',
-            '51.149.8.0/25',
-            '51.149.8.128/29',
-            '213.86.153.211/32',
-            '213.86.153.212/31',
-            '213.86.153.214/32',
-            '213.86.153.235/32',
-            '213.86.153.236/31',
-            '213.86.153.231/32'];
-            const isValidIp = isIp4InCidrs(ipAddress, validIps);
-            return {
-              'isAuthorized': isValidIp
-            };
-        };
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-DocAppApiGatewayLambdaFunctionAuthorizer"
-      - Key: Service
-        Value: Relying Party Doc App stub
-      - Key: Source
-        Value: alphagov/di-auth-stub-relying-party
-      - Key: Owner
-        Value: di-orchestration@digital.cabinet-office.gov.uk
-
   DocAppApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
     Properties:
       Name: !Sub "${AWS::StackName}-DocAppApiGatewayAuthorizer"
       ApiId: !Ref DocAppApiGateway
-      AuthorizerResultTtlInSeconds: 0
+      AuthorizerResultTtlInSeconds: 60
+      IdentitySource:
+        - $context.http.sourceIp
       AuthorizerType: REQUEST
       AuthorizerPayloadFormatVersion: 2.0
       EnableSimpleResponses: true
@@ -887,14 +836,14 @@ Resources:
           - 'eu-west-2'
           - ':lambda:path/2015-03-31/functions/'
           - !GetAtt
-            - DocAppApiGatewayLambdaFunctionAuthorizer
+            - ApiGatewayLambdaFunctionAuthorizer
             - Arn
           - /invocations
 
   DocAppApiGatewayAuthorizerInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt DocAppApiGatewayLambdaFunctionAuthorizer.Arn
+      FunctionName: !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
       Action: "lambda:InvokeFunction"
       Principal: "apigateway.amazonaws.com"
       SourceArn: !Join [
