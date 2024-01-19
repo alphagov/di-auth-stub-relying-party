@@ -7,7 +7,7 @@ on:
         required: true
 
 jobs:
-  style-checks:
+  format-java:
     name: Style checks
     runs-on: ubuntu-latest
     steps:
@@ -17,13 +17,14 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: 'corretto'
           cache: 'gradle'
       - name: Run Spotless
         run: ./gradlew --no-daemon spotlessCheck --stacktrace
 
   run-sonar-analysis:
     name: Build and analyze with Sonar
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,7 +35,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: 'corretto'
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
