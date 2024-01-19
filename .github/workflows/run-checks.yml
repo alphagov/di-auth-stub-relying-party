@@ -5,6 +5,8 @@ on:
     secrets:
       SONAR_TOKEN:
         required: true
+      SAM_APP_VALIDATE_ROLE_ARN:
+        required: true
 
 jobs:
   format-java:
@@ -56,3 +58,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew build sonar --info
+
+  sam-validation:
+    name: Validate SAM template
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.1
+        with:
+          role-to-assume: ${{ secrets.SAM_APP_VALIDATE_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: SAM validate
+        run: sam validate
+        working-directory: .
