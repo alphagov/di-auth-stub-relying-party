@@ -32,9 +32,7 @@ public class RelyingPartyConfig {
     }
 
     public static String accountManagementUrl() {
-        return configValue(
-                "MY_ACCOUNT_URL",
-                "https://account-management.integration.auth.ida.digital.cabinet-office.gov.uk/");
+        return configValue("MY_ACCOUNT_URL", "https://account-management.integration.auth.ida.digital.cabinet-office.gov.uk/");
     }
 
     public static String clientId() {
