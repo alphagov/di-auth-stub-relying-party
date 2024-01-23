@@ -19,23 +19,28 @@ Conditions:
 Mappings:
   EnvironmentConfiguration:
     dev:
-      domainName: auth-rp-dev.build.stubs.account.gov.uk
+      rpDomainName: rp-dev.build.stubs.account.gov.uk
+      docAppRpDomainName: doc-app-rp-dev.build.stubs.account.gov.uk
     build:
-      domainName: auth-rp-build.build.stubs.account.gov.uk
+      rpDomainName: rp-build.build.stubs.account.gov.uk
+      docAppRpDomainName: doc-app-rp-build.build.stubs.account.gov.uk
     staging:
-      domainName: auth-rp-staging.build.stubs.account.gov.uk
+      rpDomainName: rp-staging.build.stubs.account.gov.uk
+      docAppRpDomainName: doc-app-rp-staging.build.stubs.account.gov.uk
     integration:
-      domainName: auth-rp-integration.build.stubs.account.gov.uk
+      rpDomainName: rp-integration.build.stubs.account.gov.uk
+      docAppRpDomainName: doc-app-rp-integration.build.stubs.account.gov.uk
     production:
-      domainName: auth-rp.stubs.account.gov.uk
+      rpDomainName: rp.stubs.account.gov.uk
+      docAppRpDomainName: doc-app-rp.build.stubs.account.gov.uk
 
 Resources:
-  Certificate:
+  RpStubCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, rpDomainName ]
       DomainValidationOptions:
-        - DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+        - DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, rpDomainName ]
           HostedZoneId: !If
             - IsProduction
             - !ImportValue RootPublicHostedZoneId
@@ -43,8 +48,95 @@ Resources:
       ValidationMethod: DNS
       CertificateTransparencyLoggingPreference: ENABLED
 
-Outputs:
-  CertificateArn:
-    Value: !Ref Certificate
-    Export:
-      Name: CertificateArn
+  RpStubApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !If
+        - IsProduction
+        - rp.stubs.account.gov.uk
+        - !Sub "rp-${Environment}.build.stubs.account.gov.uk"
+      DomainNameConfigurations:
+        - CertificateArn: !Ref RpStubCertificate
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  RpStubApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      DomainName: !If
+        - IsProduction
+        - rp.stubs.account.gov.uk
+        - !Sub "rp-${Environment}.build.stubs.account.gov.uk"
+      ApiId: !ImportValue RpApiGateway
+      Stage: "$default"
+    DependsOn:
+      - RpStubApiDomain
+
+  RpStubDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !If
+        - IsProduction
+        - rp.stubs.account.gov.uk
+        - !Sub "rp-${Environment}.build.stubs.account.gov.uk"
+      HostedZoneId: !If
+        - IsProduction
+        - !ImportValue RootPublicHostedZoneId
+        - !ImportValue BuildPublicHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt RpStubApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt RpStubApiDomain.RegionalHostedZoneId
+
+  DocAppRpStubCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, docAppRpDomainName ]
+      DomainValidationOptions:
+        - DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, docAppRpDomainName ]
+          HostedZoneId: !If
+            - IsProduction
+            - !ImportValue RootPublicHostedZoneId
+            - !ImportValue BuildPublicHostedZoneId
+      ValidationMethod: DNS
+      CertificateTransparencyLoggingPreference: ENABLED
+
+  DocAppRpStubApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !If
+        - IsProduction
+        - doc-app-rp.stubs.account.gov.uk
+        - !Sub "doc-app-rp-${Environment}.build.stubs.account.gov.uk"
+      DomainNameConfigurations:
+        - CertificateArn: !Ref DocAppRpStubCertificate
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  DocAppRpStubApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      DomainName: !If
+        - IsProduction
+        - doc-app-rp.stubs.account.gov.uk
+        - !Sub "doc-app-rp-${Environment}.build.stubs.account.gov.uk"
+      ApiId: !ImportValue DocAppRpApiGateway
+      Stage: "$default"
+    DependsOn:
+      - DocAppRpStubApiDomain
+
+  DocAppRpStubDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !If
+        - IsProduction
+        - doc-app-rp.stubs.account.gov.uk
+        - !Sub "doc-app-rp-${Environment}.build.stubs.account.gov.uk"
+      HostedZoneId: !If
+        - IsProduction
+        - !ImportValue RootPublicHostedZoneId
+        - !ImportValue BuildPublicHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt DocAppRpStubApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt DocAppRpStubApiDomain.RegionalHostedZoneId
