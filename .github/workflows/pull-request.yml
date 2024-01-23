@@ -1,0 +1,20 @@
+name: Pull request
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+  merge_group:
+
+jobs:
+  run-checks:
+    uses: ./.github/workflows/run-checks.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
