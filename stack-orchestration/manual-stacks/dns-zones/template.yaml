@@ -67,7 +67,8 @@ Resources:
         - IsProduction
         - rp.stubs.account.gov.uk
         - !Sub "rp-${Environment}.build.stubs.account.gov.uk"
-      ApiId: !ImportValue RpApiGateway
+      ApiId:
+        Fn::ImportValue: !Sub "RpApiGateway-${Environment}"
       Stage: "$default"
     DependsOn:
       - RpStubApiDomain
@@ -120,7 +121,8 @@ Resources:
         - IsProduction
         - doc-app-rp.stubs.account.gov.uk
         - !Sub "doc-app-rp-${Environment}.build.stubs.account.gov.uk"
-      ApiId: !ImportValue DocAppRpApiGateway
+      ApiId:
+        Fn::ImportValue: !Sub "RpApiGateway-${Environment}"
       Stage: "$default"
     DependsOn:
       - DocAppRpStubApiDomain
