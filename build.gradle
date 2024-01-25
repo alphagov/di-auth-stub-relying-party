@@ -57,8 +57,8 @@ spotless {
 
 sonar {
     properties {
-        property "sonar.projectKey", "alphagov_di-auth-stub-relying-party"
-        property "sonar.organization", "alphagov"
+        property "sonar.projectKey", "govuk-one-login_relying-party-stub"
+        property "sonar.organization", "govuk-one-login"
         property "sonar.host.url", "https://sonarcloud.io"
     }
 }
