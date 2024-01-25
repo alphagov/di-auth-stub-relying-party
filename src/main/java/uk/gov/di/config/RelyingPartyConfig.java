@@ -1,24 +1,20 @@
 package uk.gov.di.config;
 
 import com.nimbusds.jose.JWSAlgorithm;
-import io.pivotal.cfenv.core.CfEnv;
 
 import java.util.Optional;
 
 import static java.lang.System.getenv;
-import static java.text.MessageFormat.format;
 import static java.util.function.Predicate.not;
 
 public class RelyingPartyConfig {
 
-    private static final CfEnv cfEnv = new CfEnv();
-
     public static String authCallbackUrl() {
-        return getCloudFoundryUri() + "/oidc/authorization-code/callback";
+        return getStubUri() + "/oidc/authorization-code/callback";
     }
 
     public static String postLogoutRedirectUrl() {
-        return getCloudFoundryUri() + "/signed-out";
+        return getStubUri() + "/signed-out";
     }
 
     public static String clientPrivateKey() {
@@ -34,7 +30,7 @@ public class RelyingPartyConfig {
     public static String accountManagementUrl() {
         return configValue(
                 "MY_ACCOUNT_URL",
-                "https://account-management.integration.auth.ida.digital.cabinet-office.gov.uk/");
+                "https://home.build.account.gov.uk/");
     }
 
     public static String clientId() {
@@ -57,11 +53,8 @@ public class RelyingPartyConfig {
         return configValue("OP_BASE_URL", "https://oidc.build.account.gov.uk");
     }
 
-    public static String getCloudFoundryUri() {
-        if (cfEnv.isInCf() && cfEnv.getApp().getUris().size() > 0) {
-            return format("https://{0}", cfEnv.getApp().getUris().get(0));
-        }
-        return "http://localhost:8080";
+    public static String getStubUri() {
+        return getenv().getOrDefault("STUB_URL", "http://localhost:8080");
     }
 
     private static String configValue(String key, String defaultValue) {
