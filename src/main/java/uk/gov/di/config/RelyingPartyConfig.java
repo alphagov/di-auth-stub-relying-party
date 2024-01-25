@@ -28,9 +28,7 @@ public class RelyingPartyConfig {
     }
 
     public static String accountManagementUrl() {
-        return configValue(
-                "MY_ACCOUNT_URL",
-                "https://home.build.account.gov.uk/");
+        return configValue("MY_ACCOUNT_URL", "https://home.build.account.gov.uk/");
     }
 
     public static String clientId() {

@@ -38,3 +38,9 @@ Select a space:
 ```
 
 Next execute `./deploy-sandpit.sh`
+
+## Adding secrets
+
+IPV have a tool that manages secrets in the stubs AWS account. If you need to add any further Secrets Manager secrets, 
+you should add the name of the secret to the externally managed list [here](https://github.com/govuk-one-login/ipv-stubs-common-infra/blob/main/utils/config-mgmt/app/configs/stubs.build.params.yaml) for non prod,
+or [here](https://github.com/govuk-one-login/ipv-stubs-common-infra/blob/main/utils/config-mgmt/app/configs/stubs.production.params.yaml) for prod.

@@ -253,6 +253,9 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
             - Name: SERVICE_NAME
               Value: !Sub Sample Service - ${Environment}
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
@@ -289,6 +292,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -330,6 +334,9 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
             - Name: SERVICE_NAME
               Value: !Sub Sample Service - ${Environment}
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt DocAppTaskExecutionRole.Arn
@@ -366,6 +373,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -982,3 +990,29 @@ Resources:
           Value: alphagov/di-auth-stub-relying-party
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  #
+  # Secrets
+  #
+
+  IdentitySigningPublicKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "/stubs/rp-${Environment}/IDENTITY_SIGNING_PUBLIC_KEY"
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  ECSSecretsManagerAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref IdentitySigningPublicKeySecret
+          - Effect: Allow
+            Action: kms:Decrypt
+            Resource: !GetAtt KmsKey.Arn
+
+  # TODO ATO-159: Add client id and client private key once generated
