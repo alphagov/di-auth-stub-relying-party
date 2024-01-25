@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   Template to create the infrastructure for the Auth Relying Party stub.
 
@@ -8,33 +8,33 @@ Transform:
 
 Parameters:
   VpcStackName:
-    Description: "The name of the stack that defines the VPC that this container will run in"
-    Type: "String"
+    Description: The name of the stack that defines the VPC that this container will run in
+    Type: String
   Environment:
-    Description: "Environment the infrastructure is deployed to"
-    Type: "String"
+    Description: Environment the infrastructure is deployed to
+    Type: String
   PermissionsBoundary:
     Type: String
     Description: >
       The ARN of the permissions boundary to apply to any role created by the template
-    Default: "none"
+    Default: none
   CodeSigningConfigArn:
     Type: String
     Description: >
       The ARN of the Code Signing Config to use, provided by the deployment pipeline
-    Default: "none"
+    Default: none
 
 Conditions:
   UsePermissionsBoundary:
     Fn::Not:
       - Fn::Equals:
           - !Ref PermissionsBoundary
-          - "none"
+          - none
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
-          - "none"
+          - none
 
 Globals:
   Function:
@@ -50,13 +50,13 @@ Globals:
 Mappings:
   EnvironmentConfiguration:
     build:
-      opBaseUrl: "https://oidc.build.account.gov.uk/"
+      opBaseUrl: https://oidc.build.account.gov.uk/
     staging:
-      opBaseUrl: "https://oidc.staging.account.gov.uk/"
+      opBaseUrl: https://oidc.staging.account.gov.uk/
     integration:
-      opBaseUrl: "https://oidc.integration.account.gov.uk/"
+      opBaseUrl: https://oidc.integration.account.gov.uk/
     production:
-      opBaseUrl: "https://oidc.account.gov.uk/"
+      opBaseUrl: https://oidc.account.gov.uk/
 
 Resources:
   #
@@ -70,7 +70,7 @@ Resources:
           Value: enabled
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-FargateCluster"
+          Value: !Sub ${AWS::StackName}-FargateCluster
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -94,13 +94,13 @@ Resources:
           SecurityGroups:
             - !Ref ContainerServiceSecurityGroup
       LoadBalancers:
-        - ContainerName: !Sub "${AWS::StackName}-ECSServiceTaskDefinition"
+        - ContainerName: !Sub ${AWS::StackName}-ECSServiceTaskDefinition
           ContainerPort: 8080
           TargetGroupArn: !Ref ApplicationLoadBalancerTargetGroup
       PropagateTags: SERVICE
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-ContainerService"
+          Value: !Sub ${AWS::StackName}-ContainerService
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -136,7 +136,7 @@ Resources:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-ContainerServiceSecurityGroup"
+          Value: !Sub ${AWS::StackName}-ContainerServiceSecurityGroup
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -160,13 +160,13 @@ Resources:
           SecurityGroups:
             - !Ref DocAppContainerServiceSecurityGroup
       LoadBalancers:
-        - ContainerName: !Sub "${AWS::StackName}-DocAppECSServiceTaskDefinition"
+        - ContainerName: !Sub ${AWS::StackName}-DocAppECSServiceTaskDefinition
           ContainerPort: 8080
           TargetGroupArn: !Ref DocAppApplicationLoadBalancerTargetGroup
       PropagateTags: SERVICE
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppContainerService"
+          Value: !Sub ${AWS::StackName}-DocAppContainerService
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -202,7 +202,7 @@ Resources:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppContainerServiceSecurityGroup"
+          Value: !Sub ${AWS::StackName}-DocAppContainerServiceSecurityGroup
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -218,7 +218,7 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
-        - Name: !Sub "${AWS::StackName}-ECSServiceTaskDefinition"
+        - Name: !Sub ${AWS::StackName}-ECSServiceTaskDefinition
           Image: CONTAINER-IMAGE-PLACEHOLDER
           PortMappings:
             - ContainerPort: 8080
@@ -227,9 +227,9 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: !Sub "/aws/ecs/${AWS::StackName}"
+              awslogs-group: !Sub /aws/ecs/${AWS::StackName}
               awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: "ecs"
+              awslogs-stream-prefix: ecs
           Environment:
             - Name: OP_BASE_URL
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
@@ -243,7 +243,7 @@ Resources:
         - FARGATE
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-TaskDefinition"
+          Value: !Sub ${AWS::StackName}-TaskDefinition
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -254,7 +254,7 @@ Resources:
   TaskLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/ecs/${AWS::StackName}"
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}
       RetentionInDays: 90
       KmsKeyId: !GetAtt KmsKey.Arn
 
@@ -262,7 +262,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
@@ -270,14 +270,14 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-TaskExecutionRole"
+          Value: !Sub ${AWS::StackName}-TaskExecutionRole
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -289,7 +289,7 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
-        - Name: !Sub "${AWS::StackName}-DocAppECSServiceTaskDefinition"
+        - Name: !Sub ${AWS::StackName}-DocAppECSServiceTaskDefinition
           Image: CONTAINER-IMAGE-PLACEHOLDER
           PortMappings:
             - ContainerPort: 8080
@@ -298,9 +298,9 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: !Sub "/aws/ecs/${AWS::StackName}DocApp"
+              awslogs-group: !Sub /aws/ecs/${AWS::StackName}DocApp
               awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: "ecs"
+              awslogs-stream-prefix: ecs
           Environment:
             - Name: OP_BASE_URL
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
@@ -314,7 +314,7 @@ Resources:
         - FARGATE
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppTaskDefinition"
+          Value: !Sub ${AWS::StackName}-DocAppTaskDefinition
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -325,7 +325,7 @@ Resources:
   DocAppTaskLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/ecs/${AWS::StackName}DocApp"
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}DocApp
       RetentionInDays: 90
       KmsKeyId: !GetAtt DocAppKmsKey.Arn
 
@@ -333,7 +333,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
@@ -341,14 +341,14 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppTaskExecutionRole"
+          Value: !Sub ${AWS::StackName}-DocAppTaskExecutionRole
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -370,11 +370,11 @@ Resources:
         - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
       LoadBalancerAttributes:
         - Key: routing.http.drop_invalid_header_fields.enabled
-          Value: "true"
+          Value: true
       Scheme: internal
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-ApplicationLoadBalancer"
+          Value: !Sub ${AWS::StackName}-ApplicationLoadBalancer
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -385,7 +385,7 @@ Resources:
   ApplicationLoadBalancerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckPort: "traffic-port"
+      HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
       HealthCheckPath: /
       Port: 8080
@@ -398,11 +398,11 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       TargetGroupAttributes:
-        - Key: "deregistration_delay.timeout_seconds"
-          Value: "5"
+        - Key: deregistration_delay.timeout_seconds
+          Value: 5
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-ApplicationLoadBalancerTargetGroup"
+          Value: !Sub ${AWS::StackName}-ApplicationLoadBalancerTargetGroup
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -423,7 +423,7 @@ Resources:
       Protocol: HTTP
 
   ApplicationLoadBalancerListenerRule:
-    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
         - Type: forward
@@ -461,7 +461,7 @@ Resources:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-ApplicationLoadBalancerSecurityGroup"
+          Value: !Sub ${AWS::StackName}-ApplicationLoadBalancerSecurityGroup
         - Key: Service
           Value: Relying Party stub
         - Key: Source
@@ -501,11 +501,11 @@ Resources:
         - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
       LoadBalancerAttributes:
         - Key: routing.http.drop_invalid_header_fields.enabled
-          Value: "true"
+          Value: true
       Scheme: internal
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppApplicationLoadBalancer"
+          Value: !Sub ${AWS::StackName}-DocAppApplicationLoadBalancer
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -516,7 +516,7 @@ Resources:
   DocAppApplicationLoadBalancerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckPort: "traffic-port"
+      HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
       HealthCheckPath: /
       Port: 8080
@@ -529,11 +529,11 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       TargetGroupAttributes:
-        - Key: "deregistration_delay.timeout_seconds"
-          Value: "5"
+        - Key: deregistration_delay.timeout_seconds
+          Value: 5
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppApplicationLoadBalancerTargetGroup"
+          Value: !Sub ${AWS::StackName}-DocAppApplicationLoadBalancerTargetGroup
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -554,7 +554,7 @@ Resources:
       Protocol: HTTP
 
   DocAppApplicationLoadBalancerListenerRule:
-    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
         - Type: forward
@@ -592,7 +592,7 @@ Resources:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppApplicationLoadBalancerSecurityGroup"
+          Value: !Sub ${AWS::StackName}-DocAppApplicationLoadBalancerSecurityGroup
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
@@ -629,11 +629,11 @@ Resources:
   ApiGateway:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: !Sub "${AWS::StackName}-ApiGateway"
+      Name: !Sub ${AWS::StackName}-ApiGateway
       ProtocolType: HTTP
       Tags:
         Service: Relying Party stub
-        Name: !Sub "${AWS::StackName}-ApiGateway"
+        Name: !Sub ${AWS::StackName}-ApiGateway
         Source: alphagov/di-auth-stub-relying-party
         Owner: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -643,7 +643,7 @@ Resources:
       ApiId: !Ref ApiGateway
       IntegrationType: HTTP_PROXY
       ConnectionId:
-        Fn::ImportValue: !Sub "${VpcStackName}-VpcLinkId"
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcLinkId
       ConnectionType: VPC_LINK
       IntegrationMethod: ANY
       IntegrationUri: !Ref ApplicationLoadBalancerListener
@@ -653,8 +653,8 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref ApiGateway
-      RouteKey: "ANY /{proxy+}"
-      Target: !Sub "integrations/${ApiGatewayIntegration}"
+      RouteKey: ANY /{proxy+}
+      Target: !Sub integrations/${ApiGatewayIntegration}
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref ApiGatewayAuthorizer
 
@@ -662,11 +662,11 @@ Resources:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref ApiGateway
-      StageName: "$default"
+      StageName: $default
       AutoDeploy: true
       Tags:
         Service: Relying Party stub
-        Name: !Sub "${AWS::StackName}-ApiDefaultStage"
+        Name: !Sub ${AWS::StackName}-ApiDefaultStage
         Source: alphagov/di-auth-stub-relying-party
         Owner: di-orchestration@digital.cabinet-office.gov.uk
       AccessLogSettings:
@@ -677,7 +677,7 @@ Resources:
             ip: $context.identity.sourceIp
             requestTime: $context.requestTime
             httpMethod: $context.httpMethod
-            path: $context.path"
+            path: $context.path
             routeKey: $context.routeKey
             status: $context.status
             protocol: $context.protocol
@@ -686,11 +686,6 @@ Resources:
   ApiGatewayAccessLogsGroup:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
-    Metadata:
-      checkov:
-        skip:
-          - id: "CKV_AWS_158"
-            comment: "Ensure that CloudWatch Log Group is encrypted by KMS"
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-ApiGatewayAccessLogsGroup
       RetentionInDays: 90
@@ -742,7 +737,7 @@ Resources:
         };
     Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-ApiGatewayLambdaFunctionAuthorizer"
+        Value: !Sub ${AWS::StackName}-ApiGatewayLambdaFunctionAuthorizer
       - Key: Service
         Value: Relying Party stub
       - Key: Source
@@ -753,7 +748,7 @@ Resources:
   ApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
     Properties:
-      Name: !Sub "${AWS::StackName}-ApiGatewayAuthorizer"
+      Name: !Sub ${AWS::StackName}-ApiGatewayAuthorizer
       ApiId: !Ref ApiGateway
       AuthorizerResultTtlInSeconds: 60
       IdentitySource:
@@ -762,39 +757,39 @@ Resources:
       AuthorizerPayloadFormatVersion: 2.0
       EnableSimpleResponses: true
       AuthorizerUri: !Join
-        - ''
-        - - 'arn:aws:apigateway:'
-          - 'eu-west-2'
-          - ':lambda:path/2015-03-31/functions/'
-          - !GetAtt
-            - ApiGatewayLambdaFunctionAuthorizer
-            - Arn
+        - ""
+        - - "arn:aws:apigateway:"
+          - !Ref AWS::Region
+          - :lambda:path/2015-03-31/functions/
+          - !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
           - /invocations
 
   ApiGatewayAuthorizerInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
-      Action: "lambda:InvokeFunction"
-      Principal: "apigateway.amazonaws.com"
-      SourceArn: !Join [
-        "", [
-          "arn:aws:execute-api:",
-          !Ref AWS::Region, ":",
-          !Ref AWS::AccountId, ":",
-          !Ref ApiGateway, "/",
-          "authorizers/", !Ref ApiGatewayAuthorizer
-        ]
-      ]
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ""
+        - - "arn:aws:execute-api:"
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref ApiGateway
+          - "/"
+          - "authorizers/"
+          - !Ref ApiGatewayAuthorizer
 
   DocAppApiGateway:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: !Sub "${AWS::StackName}-DocAppApiGateway"
+      Name: !Sub ${AWS::StackName}-DocAppApiGateway
       ProtocolType: HTTP
       Tags:
         Service: Relying Party Doc App stub
-        Name: !Sub "${AWS::StackName}-DocAppApiGateway"
+        Name: !Sub ${AWS::StackName}-DocAppApiGateway
         Source: alphagov/di-auth-stub-relying-party
         Owner: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -804,7 +799,7 @@ Resources:
       ApiId: !Ref DocAppApiGateway
       IntegrationType: HTTP_PROXY
       ConnectionId:
-        Fn::ImportValue: !Sub "${VpcStackName}-VpcLinkId"
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcLinkId
       ConnectionType: VPC_LINK
       IntegrationMethod: ANY
       IntegrationUri: !Ref DocAppApplicationLoadBalancerListener
@@ -814,8 +809,8 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref DocAppApiGateway
-      RouteKey: "ANY /{proxy+}"
-      Target: !Sub "integrations/${DocAppApiGatewayIntegration}"
+      RouteKey: ANY /{proxy+}
+      Target: !Sub integrations/${DocAppApiGatewayIntegration}
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref DocAppApiGatewayAuthorizer
 
@@ -823,11 +818,11 @@ Resources:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref DocAppApiGateway
-      StageName: "$default"
+      StageName: $default
       AutoDeploy: true
       Tags:
         Service: Relying Party Doc App stub
-        Name: !Sub "${AWS::StackName}-DocAppApiDefaultStage"
+        Name: !Sub ${AWS::StackName}-DocAppApiDefaultStage
         Source: alphagov/di-auth-stub-relying-party
         Owner: di-orchestration@digital.cabinet-office.gov.uk
       AccessLogSettings:
@@ -838,7 +833,7 @@ Resources:
             ip: $context.identity.sourceIp
             requestTime: $context.requestTime
             httpMethod: $context.httpMethod
-            path: $context.path"
+            path: $context.path
             routeKey: $context.routeKey
             status: $context.status
             protocol: $context.protocol
@@ -847,11 +842,6 @@ Resources:
   DocAppApiGatewayAccessLogsGroup:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
-    Metadata:
-      checkov:
-        skip:
-          - id: "CKV_AWS_158"
-            comment: "Ensure that CloudWatch Log Group is encrypted by KMS"
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-DocAppApiGatewayAccessLogsGroup
       RetentionInDays: 90
@@ -859,7 +849,7 @@ Resources:
   DocAppApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
     Properties:
-      Name: !Sub "${AWS::StackName}-DocAppApiGatewayAuthorizer"
+      Name: !Sub ${AWS::StackName}-DocAppApiGatewayAuthorizer
       ApiId: !Ref DocAppApiGateway
       AuthorizerResultTtlInSeconds: 60
       IdentitySource:
@@ -868,30 +858,30 @@ Resources:
       AuthorizerPayloadFormatVersion: 2.0
       EnableSimpleResponses: true
       AuthorizerUri: !Join
-        - ''
-        - - 'arn:aws:apigateway:'
-          - 'eu-west-2'
-          - ':lambda:path/2015-03-31/functions/'
-          - !GetAtt
-            - ApiGatewayLambdaFunctionAuthorizer
-            - Arn
+        - ""
+        - - "arn:aws:apigateway:"
+          - !Ref AWS::Region
+          - :lambda:path/2015-03-31/functions/
+          - !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
           - /invocations
 
   DocAppApiGatewayAuthorizerInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
-      Action: "lambda:InvokeFunction"
-      Principal: "apigateway.amazonaws.com"
-      SourceArn: !Join [
-        "", [
-          "arn:aws:execute-api:",
-          !Ref AWS::Region, ":",
-          !Ref AWS::AccountId, ":",
-          !Ref DocAppApiGateway, "/",
-          "authorizers/", !Ref DocAppApiGatewayAuthorizer
-        ]
-      ]
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ""
+        - - "arn:aws:execute-api:"
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref DocAppApiGateway
+          - "/"
+          - "authorizers/"
+          - !Ref DocAppApiGatewayAuthorizer
 
   #
   # KMS
@@ -906,28 +896,28 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
             Action:
               - kms:*
             Resource: "*"
           - Effect: Allow
             Principal:
-              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+              Service: !Sub logs.${AWS::Region}.amazonaws.com
             Action:
-              - "kms:Encrypt*"
-              - "kms:Decrypt*"
-              - "kms:ReEncrypt*"
-              - "kms:GenerateDataKey*"
-              - "kms:Describe*"
+              - kms:Encrypt*
+              - kms:Decrypt*
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:Describe*
             Resource: "*"
             Condition:
               ArnLike:
-                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
       Tags:
         - Key: Service
           Value: Relying Party stub
         - Key: Name
-          Value: !Sub "${AWS::StackName}-KmsKey"
+          Value: !Sub ${AWS::StackName}-KmsKey
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
         - Key: Owner
@@ -942,28 +932,28 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
             Action:
               - kms:*
             Resource: "*"
           - Effect: Allow
             Principal:
-              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+              Service: !Sub logs.${AWS::Region}.amazonaws.com
             Action:
-              - "kms:Encrypt*"
-              - "kms:Decrypt*"
-              - "kms:ReEncrypt*"
-              - "kms:GenerateDataKey*"
-              - "kms:Describe*"
+              - kms:Encrypt*
+              - kms:Decrypt*
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:Describe*
             Resource: "*"
             Condition:
               ArnLike:
-                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
       Tags:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Name
-          Value: !Sub "${AWS::StackName}-DocAppKmsKey"
+          Value: !Sub ${AWS::StackName}-DocAppKmsKey
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
         - Key: Owner
