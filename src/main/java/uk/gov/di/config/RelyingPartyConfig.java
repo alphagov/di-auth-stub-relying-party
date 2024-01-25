@@ -54,22 +54,14 @@ public class RelyingPartyConfig {
     }
 
     public static String oidcProviderUrl() {
-        return configValue(
-                "OP_BASE_URL", "https://api.build.auth.ida.digital.cabinet-office.gov.uk");
+        return configValue("OP_BASE_URL", "https://oidc.build.account.gov.uk");
     }
 
     public static String getCloudFoundryUri() {
         if (cfEnv.isInCf() && cfEnv.getApp().getUris().size() > 0) {
             return format("https://{0}", cfEnv.getApp().getUris().get(0));
         }
-        return "http://localhost:8081";
-    }
-
-    public static int getCloudfoundryPort() {
-        if (cfEnv.isInCf()) {
-            return 8080;
-        }
-        return 8081;
+        return "http://localhost:8080";
     }
 
     private static String configValue(String key, String defaultValue) {

@@ -1,0 +1,960 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Template to create the infrastructure for the Auth Relying Party stub.
+
+Transform:
+  - AWS::Serverless-2016-10-31
+  - AWS::LanguageExtensions
+
+Parameters:
+  VpcStackName:
+    Description: The name of the stack that defines the VPC that this container will run in
+    Type: String
+  Environment:
+    Description: Environment the infrastructure is deployed to
+    Type: String
+  PermissionsBoundary:
+    Type: String
+    Description: >
+      The ARN of the permissions boundary to apply to any role created by the template
+    Default: none
+  CodeSigningConfigArn:
+    Type: String
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: none
+
+Conditions:
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - none
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - none
+
+Globals:
+  Function:
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+
+Mappings:
+  EnvironmentConfiguration:
+    build:
+      opBaseUrl: https://oidc.build.account.gov.uk/
+    staging:
+      opBaseUrl: https://oidc.staging.account.gov.uk/
+    integration:
+      opBaseUrl: https://oidc.integration.account.gov.uk/
+    production:
+      opBaseUrl: https://oidc.account.gov.uk/
+
+Resources:
+  #
+  # Fargate cluster
+  #
+  FargateCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-FargateCluster
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  ContainerService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref FargateCluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+          SecurityGroups:
+            - !Ref ContainerServiceSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${AWS::StackName}-ECSServiceTaskDefinition
+          ContainerPort: 8080
+          TargetGroupArn: !Ref ApplicationLoadBalancerTargetGroup
+      PropagateTags: SERVICE
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ContainerService
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+    DependsOn: ApplicationLoadBalancerListener
+
+  ContainerServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group to access the Container Service
+      GroupName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - ContainerService
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      SecurityGroupIngress:
+        - Description: Allow traffic from the load balancer on port 8080
+          SourceSecurityGroupId: !GetAtt ApplicationLoadBalancerSecurityGroup.GroupId
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ContainerServiceSecurityGroup
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppContainerService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref FargateCluster
+      TaskDefinition: !Ref DocAppTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+          SecurityGroups:
+            - !Ref DocAppContainerServiceSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${AWS::StackName}-DocAppECSServiceTaskDefinition
+          ContainerPort: 8080
+          TargetGroupArn: !Ref DocAppApplicationLoadBalancerTargetGroup
+      PropagateTags: SERVICE
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppContainerService
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+    DependsOn: DocAppApplicationLoadBalancerListener
+
+  DocAppContainerServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group to access the Container Service
+      GroupName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - DocAppContainerService
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      SecurityGroupIngress:
+        - Description: Allow traffic from the load balancer on port 8080
+          SourceSecurityGroupId: !GetAtt DocAppApplicationLoadBalancerSecurityGroup.GroupId
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppContainerServiceSecurityGroup
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  #
+  # Fargate tasks
+  #
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: !Sub ${AWS::StackName}-ECSServiceTaskDefinition
+          Image: CONTAINER-IMAGE-PLACEHOLDER
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub /aws/ecs/${AWS::StackName}
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+          Environment:
+            - Name: OP_BASE_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
+            - Name: CLIENT_TYPE
+              Value: web
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-TaskDefinition
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  TaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}
+      RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-TaskExecutionRole
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: !Sub ${AWS::StackName}-DocAppECSServiceTaskDefinition
+          Image: CONTAINER-IMAGE-PLACEHOLDER
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub /aws/ecs/${AWS::StackName}DocApp
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+          Environment:
+            - Name: OP_BASE_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
+            - Name: CLIENT_TYPE
+              Value: app
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt DocAppTaskExecutionRole.Arn
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppTaskDefinition
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}DocApp
+      RetentionInDays: 90
+      KmsKeyId: !GetAtt DocAppKmsKey.Arn
+
+  DocAppTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppTaskExecutionRole
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  #
+  # Load balancing
+  #
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups:
+        - !GetAtt ApplicationLoadBalancerSecurityGroup.GroupId
+      Subnets:
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+      LoadBalancerAttributes:
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: true
+      Scheme: internal
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ApplicationLoadBalancer
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  ApplicationLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      Port: 8080
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Matcher:
+        HttpCode: 200
+      TargetType: ip
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 5
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ApplicationLoadBalancerTargetGroup
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  ApplicationLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      # checkov:skip=CKV_AWS_2:Certificate generation must be resolved before the listener can use HTTPS.
+      # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled.
+      DefaultActions:
+        - TargetGroupArn: !Ref ApplicationLoadBalancerTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  ApplicationLoadBalancerListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref ApplicationLoadBalancerTargetGroup
+                Weight: 1
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: User-Agent
+            Values:
+              - Mozilla
+      ListenerArn: !Ref ApplicationLoadBalancerListener
+      Priority: 1
+
+  ApplicationLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for the Application Load Balancer
+      GroupName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - ApplicationLoadBalancer
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ApplicationLoadBalancerSecurityGroup
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  ApplicationLoadBalancerSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      # checkov:skip=CKV_AWS_260: PLAT-477 Raised to resolve
+      GroupId: !GetAtt ApplicationLoadBalancerSecurityGroup.GroupId
+      CidrIp:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
+      Description: Allow traffic from the VPC on port 80
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+
+  ApplicationLoadBalancerSecurityGroupEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !GetAtt ApplicationLoadBalancerSecurityGroup.GroupId
+      DestinationSecurityGroupId: !GetAtt ContainerServiceSecurityGroup.GroupId
+      Description: Allow traffic to Container Service
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+
+  DocAppApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups:
+        - !GetAtt DocAppApplicationLoadBalancerSecurityGroup.GroupId
+      Subnets:
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+      LoadBalancerAttributes:
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: true
+      Scheme: internal
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppApplicationLoadBalancer
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppApplicationLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      Port: 8080
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Matcher:
+        HttpCode: 200
+      TargetType: ip
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 5
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppApplicationLoadBalancerTargetGroup
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppApplicationLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      # checkov:skip=CKV_AWS_2:Certificate generation must be resolved before the listener can use HTTPS.
+      # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled.
+      DefaultActions:
+        - TargetGroupArn: !Ref DocAppApplicationLoadBalancerTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref DocAppApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  DocAppApplicationLoadBalancerListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref DocAppApplicationLoadBalancerTargetGroup
+                Weight: 1
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: User-Agent
+            Values:
+              - Mozilla
+      ListenerArn: !Ref DocAppApplicationLoadBalancerListener
+      Priority: 1
+
+  DocAppApplicationLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for the Doc App Application Load Balancer
+      GroupName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - DocAppApplicationLoadBalancer
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppApplicationLoadBalancerSecurityGroup
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppApplicationLoadBalancerSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      # checkov:skip=CKV_AWS_260: PLAT-477 Raised to resolve
+      GroupId: !GetAtt DocAppApplicationLoadBalancerSecurityGroup.GroupId
+      CidrIp:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
+      Description: Allow traffic from the VPC on port 80
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+
+  DocAppApplicationLoadBalancerSecurityGroupEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !GetAtt DocAppApplicationLoadBalancerSecurityGroup.GroupId
+      DestinationSecurityGroupId: !GetAtt DocAppContainerServiceSecurityGroup.GroupId
+      Description: Allow traffic to Container Service
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+
+  #
+  # API Gateway
+  #
+
+  ApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-ApiGateway
+      ProtocolType: HTTP
+      Tags:
+        Service: Relying Party stub
+        Name: !Sub ${AWS::StackName}-ApiGateway
+        Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
+
+  ApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGateway
+      IntegrationType: HTTP_PROXY
+      ConnectionId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcLinkId
+      ConnectionType: VPC_LINK
+      IntegrationMethod: ANY
+      IntegrationUri: !Ref ApplicationLoadBalancerListener
+      PayloadFormatVersion: 1.0
+
+  ApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGateway
+      RouteKey: ANY /{proxy+}
+      Target: !Sub integrations/${ApiGatewayIntegration}
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref ApiGatewayAuthorizer
+
+  ApiDefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiGateway
+      StageName: $default
+      AutoDeploy: true
+      Tags:
+        Service: Relying Party stub
+        Name: !Sub ${AWS::StackName}-ApiDefaultStage
+        Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiGatewayAccessLogsGroup.Arn
+        Format:
+          Fn::ToJsonString:
+            requestId: $context.requestId
+            ip: $context.identity.sourceIp
+            requestTime: $context.requestTime
+            httpMethod: $context.httpMethod
+            path: $context.path
+            routeKey: $context.routeKey
+            status: $context.status
+            protocol: $context.protocol
+            responseLength: $context.responseLength
+
+  ApiGatewayAccessLogsGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-ApiGatewayAccessLogsGroup
+      RetentionInDays: 90
+
+  ApiGatewayLambdaFunctionAuthorizer:
+    Type: AWS::Serverless::Function
+    Properties:
+      # checkov:skip=CKV_AWS_116: DLQ not required
+      # checkov:skip=CKV_AWS_117: Internet access not required
+      ReservedConcurrentExecutions: 1
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: nodejs20.x
+      Timeout: 900
+      InlineCode: |
+        'use strict';
+  
+        const ip4ToInt = ip =>
+          ip.split('.').reduce((int, oct) => (int << 8) + parseInt(oct, 10), 0) >>> 0;
+        
+        const isIp4InCidr = ip => cidr => {
+          const [range, bits = 32] = cidr.split('/');
+          const mask = ~(2 ** (32 - bits) - 1);
+          return mask === 0
+            ? ip4ToInt(ip) === ip4ToInt(range)
+            : (ip4ToInt(ip) & mask) === (ip4ToInt(range) & mask);
+        };
+        
+        const isIp4InCidrs = (ip, cidrs) => cidrs.some(isIp4InCidr(ip));
+        
+        exports.handler = async(event) => {
+          const ipAddress = event.requestContext.http.sourceIp;
+          const validIps = [
+            '217.196.229.77/32',
+            '217.196.229.79/32',
+            '217.196.229.80/31',
+            '51.149.8.0/25',
+            '51.149.8.128/29',
+            '213.86.153.211/32',
+            '213.86.153.212/31',
+            '213.86.153.214/32',
+            '213.86.153.235/32',
+            '213.86.153.236/31',
+            '213.86.153.231/32'];
+            const isValidIp = isIp4InCidrs(ipAddress, validIps);
+            return {
+              'isAuthorized': isValidIp
+            };
+        };
+    Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-ApiGatewayLambdaFunctionAuthorizer
+      - Key: Service
+        Value: Relying Party stub
+      - Key: Source
+        Value: alphagov/di-auth-stub-relying-party
+      - Key: Owner
+        Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  ApiGatewayAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: !Sub ${AWS::StackName}-ApiGatewayAuthorizer
+      ApiId: !Ref ApiGateway
+      AuthorizerResultTtlInSeconds: 60
+      IdentitySource:
+        - $context.identity.sourceIp
+      AuthorizerType: REQUEST
+      AuthorizerPayloadFormatVersion: 2.0
+      EnableSimpleResponses: true
+      AuthorizerUri: !Join
+        - ""
+        - - "arn:aws:apigateway:"
+          - !Ref AWS::Region
+          - :lambda:path/2015-03-31/functions/
+          - !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
+          - /invocations
+
+  ApiGatewayAuthorizerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ""
+        - - "arn:aws:execute-api:"
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref ApiGateway
+          - "/"
+          - "authorizers/"
+          - !Ref ApiGatewayAuthorizer
+
+  DocAppApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-DocAppApiGateway
+      ProtocolType: HTTP
+      Tags:
+        Service: Relying Party Doc App stub
+        Name: !Sub ${AWS::StackName}-DocAppApiGateway
+        Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref DocAppApiGateway
+      IntegrationType: HTTP_PROXY
+      ConnectionId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcLinkId
+      ConnectionType: VPC_LINK
+      IntegrationMethod: ANY
+      IntegrationUri: !Ref DocAppApplicationLoadBalancerListener
+      PayloadFormatVersion: 1.0
+
+  DocAppApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref DocAppApiGateway
+      RouteKey: ANY /{proxy+}
+      Target: !Sub integrations/${DocAppApiGatewayIntegration}
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref DocAppApiGatewayAuthorizer
+
+  DocAppApiDefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref DocAppApiGateway
+      StageName: $default
+      AutoDeploy: true
+      Tags:
+        Service: Relying Party Doc App stub
+        Name: !Sub ${AWS::StackName}-DocAppApiDefaultStage
+        Source: alphagov/di-auth-stub-relying-party
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
+      AccessLogSettings:
+        DestinationArn: !GetAtt DocAppApiGatewayAccessLogsGroup.Arn
+        Format:
+          Fn::ToJsonString:
+            requestId: $context.requestId
+            ip: $context.identity.sourceIp
+            requestTime: $context.requestTime
+            httpMethod: $context.httpMethod
+            path: $context.path
+            routeKey: $context.routeKey
+            status: $context.status
+            protocol: $context.protocol
+            responseLength: $context.responseLength
+
+  DocAppApiGatewayAccessLogsGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-DocAppApiGatewayAccessLogsGroup
+      RetentionInDays: 90
+
+  DocAppApiGatewayAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: !Sub ${AWS::StackName}-DocAppApiGatewayAuthorizer
+      ApiId: !Ref DocAppApiGateway
+      AuthorizerResultTtlInSeconds: 60
+      IdentitySource:
+        - $context.identity.sourceIp
+      AuthorizerType: REQUEST
+      AuthorizerPayloadFormatVersion: 2.0
+      EnableSimpleResponses: true
+      AuthorizerUri: !Join
+        - ""
+        - - "arn:aws:apigateway:"
+          - !Ref AWS::Region
+          - :lambda:path/2015-03-31/functions/
+          - !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
+          - /invocations
+
+  DocAppApiGatewayAuthorizerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ""
+        - - "arn:aws:execute-api:"
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref DocAppApiGateway
+          - "/"
+          - "authorizers/"
+          - !Ref DocAppApiGatewayAuthorizer
+
+  #
+  # KMS
+  #
+
+  KmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub logs.${AWS::Region}.amazonaws.com
+            Action:
+              - kms:Encrypt*
+              - kms:Decrypt*
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:Describe*
+            Resource: "*"
+            Condition:
+              ArnLike:
+                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+      Tags:
+        - Key: Service
+          Value: Relying Party stub
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-KmsKey
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  DocAppKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub logs.${AWS::Region}.amazonaws.com
+            Action:
+              - kms:Encrypt*
+              - kms:Decrypt*
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:Describe*
+            Resource: "*"
+            Condition:
+              ArnLike:
+                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+      Tags:
+        - Key: Service
+          Value: Relying Party Doc App stub
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-DocAppKmsKey
+        - Key: Source
+          Value: alphagov/di-auth-stub-relying-party
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
