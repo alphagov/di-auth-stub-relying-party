@@ -750,7 +750,7 @@ Resources:
         
         exports.handler = async(event) => {
           const ipAddress = event.requestContext.http.sourceIp;
-          const validIps = [
+          const validIps = [Ï
             '217.196.229.77/32',
             '217.196.229.79/32',
             '217.196.229.80/31',
@@ -998,7 +998,7 @@ Resources:
   IdentitySigningPublicKeySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub "/stubs/rp-${Environment}/IDENTITY_SIGNING_PUBLIC_KEY"
+      Name: !Sub /stubs/rp-${Environment}/IDENTITY_SIGNING_PUBLIC_KEY
       KmsKeyId: !GetAtt KmsKey.Arn
 
   ECSSecretsManagerAccessManagedPolicy:
