@@ -5,9 +5,11 @@ on:
     secrets:
       SONAR_TOKEN:
         required: true
+      SAM_APP_VALIDATE_ROLE_ARN:
+        required: true
 
 jobs:
-  style-checks:
+  format-java:
     name: Style checks
     runs-on: ubuntu-latest
     steps:
@@ -17,13 +19,14 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: 'corretto'
           cache: 'gradle'
       - name: Run Spotless
         run: ./gradlew --no-daemon spotlessCheck --stacktrace
 
   run-sonar-analysis:
     name: Build and analyze with Sonar
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,7 +37,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: 'corretto'
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
@@ -55,3 +58,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew build sonar --info
+
+  sam-validation:
+    name: Validate SAM template
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.1
+        with:
+          role-to-assume: ${{ secrets.SAM_APP_VALIDATE_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: SAM validate
+        run: sam validate
+        working-directory: .

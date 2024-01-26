@@ -18,3 +18,4 @@ jobs:
     uses: ./.github/workflows/run-checks.yml
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SAM_APP_VALIDATE_ROLE_ARN: ${{ secrets.SAM_APP_VALIDATE_ROLE_ARN }}
