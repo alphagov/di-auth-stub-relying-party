@@ -21,7 +21,7 @@
   },
   {
     "ParameterKey": "SAMStackName",
-    "ParameterValue": "prod-rp-stub-pipeline"
+    "ParameterValue": "prod-rp-stub"
   },
   {
     "ParameterKey": "SigningProfileArn",

@@ -717,10 +717,10 @@ Resources:
 
   ApiGatewayAccessLogsGroup:
     Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-ApiGatewayAccessLogsGroup
       RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
 
   ApiGatewayLambdaFunctionAuthorizer:
     Type: AWS::Serverless::Function
@@ -873,10 +873,10 @@ Resources:
 
   DocAppApiGatewayAccessLogsGroup:
     Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-DocAppApiGatewayAccessLogsGroup
       RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
 
   DocAppApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
