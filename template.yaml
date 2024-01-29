@@ -51,12 +51,24 @@ Mappings:
   EnvironmentConfiguration:
     build:
       opBaseUrl: https://oidc.build.account.gov.uk/
+      stubUrl: https://auth-rp-build.build.stubs.account.gov.uk
+      docAppStubUrl: https://docapp-auth-rp-build.build.stubs.account.gov.uk
+      myAccountUrl: https://home.build.account.gov.uk
     staging:
       opBaseUrl: https://oidc.staging.account.gov.uk/
+      stubUrl: https://auth-rp-staging.build.stubs.account.gov.uk
+      docAppStubUrl: https://docapp-auth-rp-staging.build.stubs.account.gov.uk
+      myAccountUrl: https://home.staging.account.gov.uk
     integration:
       opBaseUrl: https://oidc.integration.account.gov.uk/
+      stubUrl: https://auth-rp-integration.build.stubs.account.gov.uk
+      docAppStubUrl: https://docapp-auth-rp-integration.build.stubs.account.gov.uk
+      myAccountUrl: https://home.integration.account.gov.uk
     production:
       opBaseUrl: https://oidc.account.gov.uk/
+      stubUrl: https://auth-rp.stubs.account.gov.uk
+      docAppStubUrl: https://docapp-auth-rp.stubs.account.gov.uk
+      myAccountUrl: https://home.production.account.gov.uk
 
 Resources:
   #
@@ -235,6 +247,15 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
             - Name: CLIENT_TYPE
               Value: web
+            - Name: STUB_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, stubUrl ]
+            - Name: MY_ACCOUNT_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
+            - Name: SERVICE_NAME
+              Value: !Sub Sample Service - ${Environment}
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
@@ -271,6 +292,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -306,6 +328,15 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
             - Name: CLIENT_TYPE
               Value: app
+            - Name: STUB_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, docAppStubUrl ]
+            - Name: MY_ACCOUNT_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
+            - Name: SERVICE_NAME
+              Value: !Sub Sample Service - ${Environment}
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt DocAppTaskExecutionRole.Arn
@@ -342,6 +373,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -718,7 +750,7 @@ Resources:
         
         exports.handler = async(event) => {
           const ipAddress = event.requestContext.http.sourceIp;
-          const validIps = [
+          const validIps = [Ï
             '217.196.229.77/32',
             '217.196.229.79/32',
             '217.196.229.80/31',
@@ -958,3 +990,29 @@ Resources:
           Value: alphagov/di-auth-stub-relying-party
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  #
+  # Secrets
+  #
+
+  IdentitySigningPublicKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub /stubs/rp-${Environment}/IDENTITY_SIGNING_PUBLIC_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  ECSSecretsManagerAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref IdentitySigningPublicKeySecret
+          - Effect: Allow
+            Action: kms:Decrypt
+            Resource: !GetAtt KmsKey.Arn
+
+  # TODO ATO-159: Add client id and client private key once generated
