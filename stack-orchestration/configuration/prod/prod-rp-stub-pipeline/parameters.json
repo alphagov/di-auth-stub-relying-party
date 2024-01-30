@@ -25,11 +25,11 @@
   },
   {
     "ParameterKey": "SigningProfileArn",
-    "ParameterValue": "none"
+    "ParameterValue": "arn:aws:signer:eu-west-2:616199614141:/signing-profiles/SigningProfile_82hlIhUN3wSY"
   },
   {
     "ParameterKey": "SigningProfileVersionArn",
-    "ParameterValue": "none"
+    "ParameterValue": "arn:aws:signer:eu-west-2:616199614141:/signing-profiles/SigningProfile_82hlIhUN3wSY/EFs2yWnYzD"
   },
   {
     "ParameterKey": "VpcStackName",
