@@ -718,6 +718,9 @@ Resources:
       MemorySize: 128
       Runtime: nodejs20.x
       Timeout: 900
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
       InlineCode: |
         'use strict';
   
@@ -735,8 +738,13 @@ Resources:
         const isIp4InCidrs = (ip, cidrs) => cidrs.some(isIp4InCidr(ip));
         
         exports.handler = async(event) => {
+          if (process.env.ENVIRONMENT === 'build') {
+            return {
+              'isAuthorized': true
+            };
+          }
           const ipAddress = event.requestContext.http.sourceIp;
-          const validIps = [Ï
+          const validIps = [
             '217.196.229.77/32',
             '217.196.229.79/32',
             '217.196.229.80/31',
