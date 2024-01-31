@@ -18,6 +18,11 @@ Parameters:
     Description: >
       The ARN of the permissions boundary to apply to any role created by the template
     Default: none
+  CodeSigningConfigArn:
+    Type: String
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: none
 
 Conditions:
   UsePermissionsBoundary:
@@ -25,12 +30,21 @@ Conditions:
       - Fn::Equals:
           - !Ref PermissionsBoundary
           - none
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - none
 
 Globals:
   Function:
     PermissionsBoundary: !If
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
       - !Ref AWS::NoValue
 
 Mappings:
