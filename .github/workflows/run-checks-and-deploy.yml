@@ -75,7 +75,7 @@ jobs:
       - name: SAM Package
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --output-template-file=template.yaml
+        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --output-template-file=cf-template.yaml
 
       - name: Update SAM template with ECR image and broker login credentials
         env:
@@ -83,10 +83,10 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.create-tag.outputs.image_tag }}
         run: |
-          sed -i "s|CONTAINER-IMAGE-PLACEHOLDER|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|" template.yaml
+          sed -i "s|CONTAINER-IMAGE-PLACEHOLDER|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|" cf-template.yaml
 
       - name: SAM build and test
-        run: sam build -t template.yaml
+        run: sam build -t cf-template.yaml
 
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.3
@@ -94,4 +94,4 @@ jobs:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
           working-directory: .
-          template-file: template.yaml
+          template-file: cf-template.yaml
