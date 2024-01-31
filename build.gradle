@@ -35,6 +35,9 @@ dependencies {
                     strictly '10.0.17'
                 }
             }
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1',
+            'org.mockito:mockito-inline:5.2.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
 spotless {
@@ -56,6 +59,10 @@ sonar {
         property "sonar.organization", "govuk-one-login"
         property "sonar.host.url", "https://sonarcloud.io"
     }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 java {
