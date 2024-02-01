@@ -54,21 +54,29 @@ Mappings:
       stubUrl: https://auth-rp-build.build.stubs.account.gov.uk
       docAppStubUrl: https://docapp-auth-rp-build.build.stubs.account.gov.uk
       myAccountUrl: https://home.build.account.gov.uk
+      clientId: k63SkCCUsoocQhowC9wt6X5R7A8NakJB
+      docAppClientId: 0Aqr6Oodr9dOUz8jDC5RqsWJKTtMsGG9
     staging:
       opBaseUrl: https://oidc.staging.account.gov.uk/
       stubUrl: https://auth-rp-staging.build.stubs.account.gov.uk
       docAppStubUrl: https://docapp-auth-rp-staging.build.stubs.account.gov.uk
       myAccountUrl: https://home.staging.account.gov.uk
+      clientId: 8u21cESiFjAcO4IUC6H3ANNgkmu4MpH8
+      docAppClientId: rRyf33vkB8DG6JcisbS1KMQtawhEFPcO
     integration:
       opBaseUrl: https://oidc.integration.account.gov.uk/
       stubUrl: https://auth-rp-integration.build.stubs.account.gov.uk
       docAppStubUrl: https://docapp-auth-rp-integration.build.stubs.account.gov.uk
       myAccountUrl: https://home.integration.account.gov.uk
+      clientId: cVCXupm3pykG8OJV0foZFAOtVeT3gukI
+      docAppClientId: uSGXYNKJgIj3Llntbera5hNNuzgA09NA
     production:
       opBaseUrl: https://oidc.account.gov.uk/
       stubUrl: https://auth-rp.stubs.account.gov.uk
       docAppStubUrl: https://docapp-auth-rp.stubs.account.gov.uk
       myAccountUrl: https://home.production.account.gov.uk
+      clientId: Y6YaRZ9bjCwS6HxaB34zvRhZJgBQyryT
+      docAppClientId: cAcut5r3PMtoDORZr5b9JT7VPw6VuF3Q
 
 Resources:
   #
@@ -253,9 +261,13 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
             - Name: SERVICE_NAME
               Value: !Sub Sample Service - ${Environment}
+            - Name: CLIENT_ID
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
           Secrets:
             - Name: IDENTITY_SIGNING_PUBLIC_KEY
               ValueFrom: !Ref IdentitySigningPublicKeySecret
+            - Name: CLIENT_PRIVATE_KEY
+              ValueFrom: !Ref ClientPrivateKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
@@ -293,6 +305,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
         - !Ref ECSSecretsManagerAccessManagedPolicy
+        - !Ref ClientPrivateKeySecretAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -334,9 +347,13 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
             - Name: SERVICE_NAME
               Value: !Sub Sample Service - ${Environment}
+            - Name: CLIENT_ID
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, docAppClientId ]
           Secrets:
             - Name: IDENTITY_SIGNING_PUBLIC_KEY
               ValueFrom: !Ref IdentitySigningPublicKeySecret
+            - Name: CLIENT_PRIVATE_KEY
+              ValueFrom: !Ref DocAppClientPrivateKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt DocAppTaskExecutionRole.Arn
@@ -374,6 +391,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
         - !Ref ECSSecretsManagerAccessManagedPolicy
+        - !Ref DocAppClientPrivateKeySecretAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -934,6 +952,18 @@ Resources:
       Name: !Sub /stubs/rp-${Environment}/IDENTITY_SIGNING_PUBLIC_KEY
       KmsKeyId: !GetAtt KmsKey.Arn
 
+  ClientPrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub /stubs/rp-${Environment}/CLIENT_PRIVATE_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  DocAppClientPrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub /stubs/rp-${Environment}/DOC_APP_CLIENT_PRIVATE_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
   ECSSecretsManagerAccessManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -948,4 +978,24 @@ Resources:
             Action: kms:Decrypt
             Resource: !GetAtt KmsKey.Arn
 
-  # TODO ATO-159: Add client id and client private key once generated
+  ClientPrivateKeySecretAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref ClientPrivateKeySecret
+
+  DocAppClientPrivateKeySecretAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref DocAppClientPrivateKeySecret
