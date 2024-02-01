@@ -358,7 +358,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/ecs/${AWS::StackName}DocApp
       RetentionInDays: 90
-      KmsKeyId: !GetAtt DocAppKmsKey.Arn
+      KmsKeyId: !GetAtt KmsKey.Arn
 
   DocAppTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -919,42 +919,6 @@ Resources:
           Value: Relying Party stub
         - Key: Name
           Value: !Sub ${AWS::StackName}-KmsKey
-        - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
-        - Key: Owner
-          Value: di-orchestration@digital.cabinet-office.gov.uk
-
-  DocAppKmsKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action:
-              - kms:*
-            Resource: "*"
-          - Effect: Allow
-            Principal:
-              Service: !Sub logs.${AWS::Region}.amazonaws.com
-            Action:
-              - kms:Encrypt*
-              - kms:Decrypt*
-              - kms:ReEncrypt*
-              - kms:GenerateDataKey*
-              - kms:Describe*
-            Resource: "*"
-            Condition:
-              ArnLike:
-                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
-      Tags:
-        - Key: Service
-          Value: Relying Party Doc App stub
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-DocAppKmsKey
         - Key: Source
           Value: alphagov/di-auth-stub-relying-party
         - Key: Owner
