@@ -51,29 +51,29 @@ Mappings:
   EnvironmentConfiguration:
     build:
       opBaseUrl: https://oidc.build.account.gov.uk/
-      stubUrl: https://auth-rp-build.build.stubs.account.gov.uk
-      docAppStubUrl: https://docapp-auth-rp-build.build.stubs.account.gov.uk
+      stubUrl: https://rp-build.build.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp-build.build.stubs.account.gov.uk
       myAccountUrl: https://home.build.account.gov.uk
       clientId: k63SkCCUsoocQhowC9wt6X5R7A8NakJB
       docAppClientId: 0Aqr6Oodr9dOUz8jDC5RqsWJKTtMsGG9
     staging:
       opBaseUrl: https://oidc.staging.account.gov.uk/
-      stubUrl: https://auth-rp-staging.build.stubs.account.gov.uk
-      docAppStubUrl: https://docapp-auth-rp-staging.build.stubs.account.gov.uk
+      stubUrl: https://rp-staging.build.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp-staging.build.stubs.account.gov.uk
       myAccountUrl: https://home.staging.account.gov.uk
       clientId: 8u21cESiFjAcO4IUC6H3ANNgkmu4MpH8
       docAppClientId: rRyf33vkB8DG6JcisbS1KMQtawhEFPcO
     integration:
       opBaseUrl: https://oidc.integration.account.gov.uk/
-      stubUrl: https://auth-rp-integration.build.stubs.account.gov.uk
-      docAppStubUrl: https://docapp-auth-rp-integration.build.stubs.account.gov.uk
+      stubUrl: https://rp-integration.build.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp-integration.build.stubs.account.gov.uk
       myAccountUrl: https://home.integration.account.gov.uk
       clientId: cVCXupm3pykG8OJV0foZFAOtVeT3gukI
       docAppClientId: uSGXYNKJgIj3Llntbera5hNNuzgA09NA
     production:
       opBaseUrl: https://oidc.account.gov.uk/
-      stubUrl: https://auth-rp.stubs.account.gov.uk
-      docAppStubUrl: https://docapp-auth-rp.stubs.account.gov.uk
+      stubUrl: https://rp.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp.stubs.account.gov.uk
       myAccountUrl: https://home.production.account.gov.uk
       clientId: Y6YaRZ9bjCwS6HxaB34zvRhZJgBQyryT
       docAppClientId: cAcut5r3PMtoDORZr5b9JT7VPw6VuF3Q
