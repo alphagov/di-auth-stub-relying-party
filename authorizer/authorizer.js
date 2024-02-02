@@ -31,7 +31,10 @@ exports.handler = async(event) => {
         '213.86.153.214/32',
         '213.86.153.235/32',
         '213.86.153.236/31',
-        '213.86.153.231/32'];
+        '213.86.153.231/32',
+        '3.9.227.33/32',
+        '18.132.149.145/32',
+    ];
     const isValidIp = isIp4InCidrs(ipAddress, validIps);
     return {
         'isAuthorized': isValidIp
