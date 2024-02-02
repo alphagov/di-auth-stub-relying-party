@@ -1,11 +1,11 @@
 [
   {
     "ParameterKey": "ArtifactSourceBucketArn",
-    "ParameterValue": "arn:aws:s3:::build-rp-stub-pipeline-artifactpromotionbucket-dv4oktcnb4te"
+    "ParameterValue": "arn:aws:s3:::stage-rp-stub-pipeline-artifactpromotionbucket-redfqrqjhvep"
   },
   {
     "ParameterKey": "ArtifactSourceBucketEventTriggerRoleArn",
-    "ParameterValue": "arn:aws:iam::616199614141:role/PL-build-rp-stub-pipeline-PromoTrigRole-021a9f716eca"
+    "ParameterValue": "arn:aws:iam::616199614141:role/PL-stage-rp-stub-pipeline-PromoTrigRole-0a1df7461aa2"
   },
   {
     "ParameterKey": "ContainerSignerKmsKeyArn",
