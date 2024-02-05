@@ -13,14 +13,14 @@ The records are created in a hosted zone owned by IPV. They also reference API g
 
 ### Domains
 
-The template creates record for the following subdomain(s):
+The template creates records for the following subdomain(s):
 
 - `rp`
 - `doc-app-rp`
 
 ## Deployment
 
-To deploy the template to the appropriate AWS account.
+To deploy the template to the appropriate AWS account:
 
 Replace `<environment>` with `dev`, `build`, `staging`, `integration`, `production` in either of the commands below.
 
