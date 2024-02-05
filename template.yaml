@@ -94,7 +94,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -124,7 +124,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
     DependsOn: ApplicationLoadBalancerListener
@@ -160,7 +160,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -190,7 +190,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
     DependsOn: DocAppApplicationLoadBalancerListener
@@ -226,7 +226,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -280,7 +280,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -316,7 +316,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -366,7 +366,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -402,7 +402,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -428,7 +428,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -456,7 +456,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -515,7 +515,7 @@ Resources:
         - Key: Service
           Value: Relying Party stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -559,7 +559,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -587,7 +587,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -646,7 +646,7 @@ Resources:
         - Key: Service
           Value: Relying Party Doc App stub
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -684,7 +684,7 @@ Resources:
       Tags:
         Service: Relying Party stub
         Name: !Sub ${AWS::StackName}-ApiGateway
-        Source: alphagov/di-auth-stub-relying-party
+        Source: govuk-one-login/relying-party-stub
         Owner: di-orchestration@digital.cabinet-office.gov.uk
 
   ApiGatewayIntegration:
@@ -717,7 +717,7 @@ Resources:
       Tags:
         Service: Relying Party stub
         Name: !Sub ${AWS::StackName}-ApiDefaultStage
-        Source: alphagov/di-auth-stub-relying-party
+        Source: govuk-one-login/relying-party-stub
         Owner: di-orchestration@digital.cabinet-office.gov.uk
       AccessLogSettings:
         DestinationArn: !GetAtt ApiGatewayAccessLogsGroup.Arn
@@ -760,7 +760,7 @@ Resources:
       - Key: Service
         Value: Relying Party stub
       - Key: Source
-        Value: alphagov/di-auth-stub-relying-party
+        Value: govuk-one-login/relying-party-stub
       - Key: Owner
         Value: di-orchestration@digital.cabinet-office.gov.uk
 
@@ -809,7 +809,7 @@ Resources:
       Tags:
         Service: Relying Party Doc App stub
         Name: !Sub ${AWS::StackName}-DocAppApiGateway
-        Source: alphagov/di-auth-stub-relying-party
+        Source: govuk-one-login/relying-party-stub
         Owner: di-orchestration@digital.cabinet-office.gov.uk
 
   DocAppApiGatewayIntegration:
@@ -842,7 +842,7 @@ Resources:
       Tags:
         Service: Relying Party Doc App stub
         Name: !Sub ${AWS::StackName}-DocAppApiDefaultStage
-        Source: alphagov/di-auth-stub-relying-party
+        Source: govuk-one-login/relying-party-stub
         Owner: di-orchestration@digital.cabinet-office.gov.uk
       AccessLogSettings:
         DestinationArn: !GetAtt DocAppApiGatewayAccessLogsGroup.Arn
@@ -938,7 +938,7 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-KmsKey
         - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
+          Value: govuk-one-login/relying-party-stub
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
