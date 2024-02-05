@@ -75,8 +75,8 @@ Mappings:
       stubUrl: https://rp.stubs.account.gov.uk
       docAppStubUrl: https://doc-app-rp.stubs.account.gov.uk
       myAccountUrl: https://home.production.account.gov.uk
-      clientId: Y6YaRZ9bjCwS6HxaB34zvRhZJgBQyryT
-      docAppClientId: cAcut5r3PMtoDORZr5b9JT7VPw6VuF3Q
+      clientId: mTGf7RHk09WyEYUNZ71IUGIFJxEQ5hn1
+      docAppClientId: mmJjOFD1eKxRKHhG7foSRpWVzz2UyAXR
 
 Resources:
   #
