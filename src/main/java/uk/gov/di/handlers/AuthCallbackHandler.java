@@ -52,10 +52,14 @@ public class AuthCallbackHandler implements Route {
             boolean coreIdentityClaimPresent = Objects.nonNull(coreIdentityJWT);
             model.put("core_identity_claim_present", coreIdentityClaimPresent);
             model.put("core_identity_claim", coreIdentityJWT);
-
             if (coreIdentityClaimPresent) {
                 model.put("core_identity_claim_signature", validator.isValid(coreIdentityJWT));
             }
+
+            var returnCodeClaim = userInfo.getClaim("https://vocab.account.gov.uk/v1/returnCode");
+            boolean returnCodeClaimPresent = Objects.nonNull(returnCodeClaim);
+            model.put("return_code_claim_present", returnCodeClaimPresent);
+            model.put("return_code_claim", returnCodeClaim);
 
             boolean addressClaimPresent =
                     Objects.nonNull(userInfo.getClaim("https://vocab.account.gov.uk/v1/address"));

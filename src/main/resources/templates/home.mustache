@@ -104,6 +104,14 @@
                                 </label>
                             </div>
                         </div>
+                        <legend class="govuk-fieldset__legend govuk-fieldset__legend--m govuk-!-margin-top-6">
+                            <h3 class="govuk-fieldset__heading">
+                                <label class="govuk-label govuk-label--m" for="reauth-id-token">
+                                    ID token for reauthentication
+                                </label>
+                            </h3>
+                        </legend>
+                        <input class="govuk-input" id="reauth-id-token" name="reauth-id-token" type="text">
                     </fieldset>
                 </div>
                 <div class="govuk-grid-column-one-quarter govuk-form-group">
@@ -214,7 +222,15 @@
                                     social security record
                                 </label>
                             </div>
+                            <div class="govuk-checkboxes__item">
+                                <input class="govuk-checkboxes__input" id="claims-return-code" name="claims-return-code" type="checkbox" value="https://vocab.account.gov.uk/v1/returnCode">
+                                <label class="govuk-label govuk-checkboxes__label" for="claims-return-code">
+                                    return code
+                                </label>
+                            </div>
                         </div>
+                        <label class="govuk-label govuk-checkboxes__label" for="claims-inherited-identity">Inherited Identity (jwt):</label>
+                        <textarea class="govuk-textarea" id="claims-inherited-identity" name="claims-inherited-identity" type="text"></textarea>
                     </fieldset>
                 </div>
 

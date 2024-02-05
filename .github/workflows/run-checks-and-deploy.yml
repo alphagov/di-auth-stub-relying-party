@@ -1,0 +1,100 @@
+name: Run checks and deploy
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  run-checks:
+    uses: ./.github/workflows/run-checks.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SAM_APP_VALIDATE_ROLE_ARN: ${{ secrets.SAM_APP_VALIDATE_ROLE_ARN }}
+  docker-build-and-push:
+    name: Docker build, push and deploy
+    needs: run-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      AWS_REGION: eu-west-2
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@v2
+
+      - name: Set up AWS creds
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create tag
+        id: create-tag
+        run: |
+          IMAGE_TAG="${{ github.sha }}-rp-stub-$(date +'%Y-%m-%d-%H%M%S')"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: 'v1.9.0'
+
+      - name: Build, tag, sign and push image to Amazon ECR
+        env:
+          CONTAINER_SIGNER_KEY: ${{ secrets.CONTAINER_SIGNER_KMS_KEY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.create-tag.outputs.image_tag }}
+        run: |
+          cd ${GITHUB_WORKSPACE} || exit 1
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          cosign sign --key awskms:///${CONTAINER_SIGNER_KEY} $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: SAM Package
+        working-directory: .
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --output-template-file=cf-template.yaml
+
+      - name: Update SAM template with ECR image and broker login credentials
+        working-directory: .
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.create-tag.outputs.image_tag }}
+        run: |
+          sed -i "s|CONTAINER-IMAGE-PLACEHOLDER|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|" cf-template.yaml
+
+      - name: SAM build and test
+        working-directory: .
+        run: sam build -t cf-template.yaml
+
+      - name: Deploy SAM app
+        uses: govuk-one-login/devplatform-upload-action@v3.3
+        with:
+          artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+          working-directory: .
+          template-file: cf-template.yaml

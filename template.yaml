@@ -51,12 +51,32 @@ Mappings:
   EnvironmentConfiguration:
     build:
       opBaseUrl: https://oidc.build.account.gov.uk/
+      stubUrl: https://rp-build.build.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp-build.build.stubs.account.gov.uk
+      myAccountUrl: https://home.build.account.gov.uk
+      clientId: k63SkCCUsoocQhowC9wt6X5R7A8NakJB
+      docAppClientId: 0Aqr6Oodr9dOUz8jDC5RqsWJKTtMsGG9
     staging:
       opBaseUrl: https://oidc.staging.account.gov.uk/
+      stubUrl: https://rp-staging.build.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp-staging.build.stubs.account.gov.uk
+      myAccountUrl: https://home.staging.account.gov.uk
+      clientId: 8u21cESiFjAcO4IUC6H3ANNgkmu4MpH8
+      docAppClientId: rRyf33vkB8DG6JcisbS1KMQtawhEFPcO
     integration:
       opBaseUrl: https://oidc.integration.account.gov.uk/
+      stubUrl: https://rp-integration.build.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp-integration.build.stubs.account.gov.uk
+      myAccountUrl: https://home.integration.account.gov.uk
+      clientId: cVCXupm3pykG8OJV0foZFAOtVeT3gukI
+      docAppClientId: uSGXYNKJgIj3Llntbera5hNNuzgA09NA
     production:
       opBaseUrl: https://oidc.account.gov.uk/
+      stubUrl: https://rp.stubs.account.gov.uk
+      docAppStubUrl: https://doc-app-rp.stubs.account.gov.uk
+      myAccountUrl: https://home.production.account.gov.uk
+      clientId: Y6YaRZ9bjCwS6HxaB34zvRhZJgBQyryT
+      docAppClientId: cAcut5r3PMtoDORZr5b9JT7VPw6VuF3Q
 
 Resources:
   #
@@ -235,6 +255,19 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
             - Name: CLIENT_TYPE
               Value: web
+            - Name: STUB_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, stubUrl ]
+            - Name: MY_ACCOUNT_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
+            - Name: SERVICE_NAME
+              Value: !Sub Sample Service - ${Environment}
+            - Name: CLIENT_ID
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
+            - Name: CLIENT_PRIVATE_KEY
+              ValueFrom: !Ref ClientPrivateKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
@@ -271,6 +304,8 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
+        - !Ref ClientPrivateKeySecretAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -306,6 +341,19 @@ Resources:
               Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
             - Name: CLIENT_TYPE
               Value: app
+            - Name: STUB_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, docAppStubUrl ]
+            - Name: MY_ACCOUNT_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
+            - Name: SERVICE_NAME
+              Value: !Sub Sample Service - ${Environment}
+            - Name: CLIENT_ID
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, docAppClientId ]
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
+            - Name: CLIENT_PRIVATE_KEY
+              ValueFrom: !Ref DocAppClientPrivateKeySecret
       Cpu: 256
       Memory: 512
       ExecutionRoleArn: !GetAtt DocAppTaskExecutionRole.Arn
@@ -327,7 +375,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/ecs/${AWS::StackName}DocApp
       RetentionInDays: 90
-      KmsKeyId: !GetAtt DocAppKmsKey.Arn
+      KmsKeyId: !GetAtt KmsKey.Arn
 
   DocAppTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -342,6 +390,8 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
+        - !Ref DocAppClientPrivateKeySecretAccessManagedPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -685,10 +735,10 @@ Resources:
 
   ApiGatewayAccessLogsGroup:
     Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-ApiGatewayAccessLogsGroup
       RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
 
   ApiGatewayLambdaFunctionAuthorizer:
     Type: AWS::Serverless::Function
@@ -696,45 +746,14 @@ Resources:
       # checkov:skip=CKV_AWS_116: DLQ not required
       # checkov:skip=CKV_AWS_117: Internet access not required
       ReservedConcurrentExecutions: 1
-      Handler: index.handler
+      Handler: authorizer.handler
       MemorySize: 128
       Runtime: nodejs20.x
       Timeout: 900
-      InlineCode: |
-        'use strict';
-  
-        const ip4ToInt = ip =>
-          ip.split('.').reduce((int, oct) => (int << 8) + parseInt(oct, 10), 0) >>> 0;
-        
-        const isIp4InCidr = ip => cidr => {
-          const [range, bits = 32] = cidr.split('/');
-          const mask = ~(2 ** (32 - bits) - 1);
-          return mask === 0
-            ? ip4ToInt(ip) === ip4ToInt(range)
-            : (ip4ToInt(ip) & mask) === (ip4ToInt(range) & mask);
-        };
-        
-        const isIp4InCidrs = (ip, cidrs) => cidrs.some(isIp4InCidr(ip));
-        
-        exports.handler = async(event) => {
-          const ipAddress = event.requestContext.http.sourceIp;
-          const validIps = [
-            '217.196.229.77/32',
-            '217.196.229.79/32',
-            '217.196.229.80/31',
-            '51.149.8.0/25',
-            '51.149.8.128/29',
-            '213.86.153.211/32',
-            '213.86.153.212/31',
-            '213.86.153.214/32',
-            '213.86.153.235/32',
-            '213.86.153.236/31',
-            '213.86.153.231/32'];
-            const isValidIp = isIp4InCidrs(ipAddress, validIps);
-            return {
-              'isAuthorized': isValidIp
-            };
-        };
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+      CodeUri: authorizer
     Tags:
       - Key: Name
         Value: !Sub ${AWS::StackName}-ApiGatewayLambdaFunctionAuthorizer
@@ -841,10 +860,10 @@ Resources:
 
   DocAppApiGatewayAccessLogsGroup:
     Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158:Ensure that CloudWatch Log Group is encrypted by KMS
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-DocAppApiGatewayAccessLogsGroup
       RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
 
   DocAppApiGatewayAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
@@ -923,38 +942,60 @@ Resources:
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
-  DocAppKmsKey:
-    Type: AWS::KMS::Key
+  #
+  # Secrets
+  #
+
+  IdentitySigningPublicKeySecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
+      Name: !Sub /stubs/rp-${Environment}/IDENTITY_SIGNING_PUBLIC_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  ClientPrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub /stubs/rp-${Environment}/CLIENT_PRIVATE_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  DocAppClientPrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub /stubs/rp-${Environment}/DOC_APP_CLIENT_PRIVATE_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  ECSSecretsManagerAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
             Action:
-              - kms:*
-            Resource: "*"
+              - secretsmanager:GetSecretValue
+            Resource: !Ref IdentitySigningPublicKeySecret
           - Effect: Allow
-            Principal:
-              Service: !Sub logs.${AWS::Region}.amazonaws.com
+            Action: kms:Decrypt
+            Resource: !GetAtt KmsKey.Arn
+
+  ClientPrivateKeySecretAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
             Action:
-              - kms:Encrypt*
-              - kms:Decrypt*
-              - kms:ReEncrypt*
-              - kms:GenerateDataKey*
-              - kms:Describe*
-            Resource: "*"
-            Condition:
-              ArnLike:
-                kms:EncryptionContext:aws:logs:arn: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
-      Tags:
-        - Key: Service
-          Value: Relying Party Doc App stub
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-DocAppKmsKey
-        - Key: Source
-          Value: alphagov/di-auth-stub-relying-party
-        - Key: Owner
-          Value: di-orchestration@digital.cabinet-office.gov.uk
+              - secretsmanager:GetSecretValue
+            Resource: !Ref ClientPrivateKeySecret
+
+  DocAppClientPrivateKeySecretAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref DocAppClientPrivateKeySecret

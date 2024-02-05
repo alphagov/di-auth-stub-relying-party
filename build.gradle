@@ -7,8 +7,8 @@ buildscript {
 }
 
 plugins {
-    id "com.diffplug.spotless" version "6.11.0"
-    id "org.sonarqube" version "4.2.1.3168"
+    id "com.diffplug.spotless" version "6.25.0"
+    id "org.sonarqube" version "4.4.1.3373"
 }
 
 apply plugin: 'java'
@@ -28,16 +28,16 @@ dependencies {
             "com.sparkjava:spark-template-mustache:2.7.1",
             "com.nimbusds:oauth2-oidc-sdk:9.37.2",
             "org.slf4j:slf4j-simple:2.0.11",
-            "org.apache.httpcomponents:httpclient:4.5.13",
-            "io.pivotal.cfenv:java-cfenv:2.4.0",
+            "org.apache.httpcomponents:httpclient:4.5.14",
             'net.minidev:json-smart:2.5.0',
-            'com.fasterxml.jackson.core:jackson-databind:2.15.3',
             implementation('org.eclipse.jetty:jetty-server') {
                 version {
                     strictly '10.0.17'
                 }
             }
-    testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2',
+            'org.mockito:mockito-inline:5.2.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 }
 
 spotless {
@@ -55,10 +55,14 @@ spotless {
 
 sonar {
     properties {
-        property "sonar.projectKey", "alphagov_di-auth-stub-relying-party"
-        property "sonar.organization", "alphagov"
+        property "sonar.projectKey", "govuk-one-login_relying-party-stub"
+        property "sonar.organization", "govuk-one-login"
         property "sonar.host.url", "https://sonarcloud.io"
     }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 java {

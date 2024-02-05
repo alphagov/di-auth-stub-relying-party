@@ -17,6 +17,6 @@
   },
   {
     "Key": "Source",
-    "Value": "alphagov/di-auth-stub-relying-party"
+    "Value": "govuk-one-login/relying-party-stub"
   }
 ]

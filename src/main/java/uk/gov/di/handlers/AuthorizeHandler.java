@@ -79,6 +79,8 @@ public class AuthorizeHandler implements Route {
 
             String rpSid = formParameters.get("rp-sid");
 
+            String idToken = formParameters.get("reauth-id-token");
+
             if (formParameters.containsKey("loc") && !formParameters.get("loc").isEmpty()) {
                 vtr = "%s.%s".formatted(formParameters.get("loc"), vtr);
                 LOG.info("VTR value selected: {}", vtr);
@@ -127,9 +129,40 @@ public class AuthorizeHandler implements Route {
                 claimsSetRequest = claimsSetRequest.add(socialSecurityRecordEntry);
             }
 
+            if (formParameters.containsKey("claims-return-code")) {
+                LOG.info("Return code claim requested");
+                var returnCodeEntry =
+                        new ClaimsSetRequest.Entry(formParameters.get("claims-return-code"))
+                                .withClaimRequirement(ClaimRequirement.ESSENTIAL);
+                claimsSetRequest = claimsSetRequest.add(returnCodeEntry);
+            }
+
+            if (formParameters.containsKey("claims-inherited-identity")) {
+                if (!formParameters.get("claims-inherited-identity").trim().isEmpty()) {
+                    LOG.info("Inherited Identity record claim requested");
+                    var inheritedIdentityEntry =
+                            new ClaimsSetRequest.Entry(
+                                            "https://vocab.account.gov.uk/v1/inheritedIdentityJWT")
+                                    .withValues(
+                                            List.of(
+                                                    formParameters.get(
+                                                            "claims-inherited-identity")));
+                    claimsSetRequest = claimsSetRequest.add(inheritedIdentityEntry);
+                } else {
+                    claimsSetRequest.delete("claims-inherited-identity");
+                }
+            }
+
             var authRequest =
                     buildAuthorizeRequest(
-                            formParameters, vtr, scopes, claimsSetRequest, language, prompt, rpSid);
+                            formParameters,
+                            vtr,
+                            scopes,
+                            claimsSetRequest,
+                            language,
+                            prompt,
+                            rpSid,
+                            idToken);
 
             if (formParameters.containsKey("method")
                     && formParameters.get("method").equals("post")) {
@@ -162,7 +195,8 @@ public class AuthorizeHandler implements Route {
             ClaimsSetRequest claimsSetRequest,
             String language,
             String prompt,
-            String rpSid)
+            String rpSid,
+            String idToken)
             throws URISyntaxException {
         if ("object".equals(formParameters.getOrDefault("request", "query"))) {
             LOG.info("Building authorize request with JAR");
@@ -173,7 +207,8 @@ public class AuthorizeHandler implements Route {
                     claimsSetRequest,
                     language,
                     prompt,
-                    rpSid);
+                    rpSid,
+                    idToken);
         } else {
             LOG.info("Building authorize request with query params");
             return oidcClient.buildQueryParamAuthorizeRequest(
