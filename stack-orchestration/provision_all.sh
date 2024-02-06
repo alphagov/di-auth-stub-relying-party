@@ -10,8 +10,7 @@ export AWS_PAGER=""
 ## Provision ECR
 if [ $ENVIRONMENT == "build" ]
 then
-  echo ecr
-  $PROVISION_COMMAND "$ENVIRONMENT" auth-rp-stub-ecr container-image-repository LATEST
+  $PROVISION_COMMAND "$ENVIRONMENT" build-rp-stub-ecr container-image-repository LATEST
 fi
 
 ## Provision secure pipelines
