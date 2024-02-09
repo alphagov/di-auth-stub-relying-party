@@ -35,6 +35,10 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - none
+  IsStaging:
+    Fn::Equals:
+      - !Ref Environment
+      - staging
 
 Globals:
   Function:
@@ -63,6 +67,8 @@ Mappings:
       myAccountUrl: https://home.staging.account.gov.uk
       clientId: 8u21cESiFjAcO4IUC6H3ANNgkmu4MpH8
       docAppClientId: rRyf33vkB8DG6JcisbS1KMQtawhEFPcO
+      perfTestStubUrl: https://perf-test-rp-staging.build.stubs.account.gov.uk
+      perfTestClientId: YaBG8osAlt6e6hzGXi79scs0T0zarwOd
     integration:
       opBaseUrl: https://oidc.integration.account.gov.uk/
       stubUrl: https://rp-integration.build.stubs.account.gov.uk
@@ -225,6 +231,74 @@ Resources:
           Value: !Sub ${AWS::StackName}-DocAppContainerServiceSecurityGroup
         - Key: Service
           Value: Relying Party Doc App stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  PerfTestContainerService:
+    Type: AWS::ECS::Service
+    Condition: IsStaging
+    Properties:
+      Cluster: !Ref FargateCluster
+      TaskDefinition: !Ref PerfTestTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+          SecurityGroups:
+            - !Ref PerfTestContainerServiceSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Sub ${AWS::StackName}-PerfTestECSServiceTaskDefinition
+          ContainerPort: 8080
+          TargetGroupArn: !Ref PerfTestApplicationLoadBalancerTargetGroup
+      PropagateTags: SERVICE
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestContainerService
+        - Key: Service
+          Value: Relying Party Performance Testing stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+    DependsOn: PerfTestApplicationLoadBalancerListener
+
+  PerfTestContainerServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsStaging
+    Properties:
+      GroupDescription: Security Group to access the Container Service
+      GroupName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - PerfTestContainerService
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      SecurityGroupIngress:
+        - Description: Allow traffic from the load balancer on port 8080
+          SourceSecurityGroupId: !GetAtt PerfTestApplicationLoadBalancerSecurityGroup.GroupId
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestContainerServiceSecurityGroup
+        - Key: Service
+          Value: Relying Party Performance Testing stub
         - Key: Source
           Value: govuk-one-login/relying-party-stub
         - Key: Owner
@@ -406,6 +480,95 @@ Resources:
         - Key: Owner
           Value: di-orchestration@digital.cabinet-office.gov.uk
 
+  PerfTestTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Condition: IsStaging
+    Properties:
+      ContainerDefinitions:
+        - Name: !Sub ${AWS::StackName}-PerfTestECSServiceTaskDefinition
+          Image: CONTAINER-IMAGE-PLACEHOLDER
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub /aws/ecs/${AWS::StackName}PerfTest
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+          Environment:
+            - Name: OP_BASE_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, opBaseUrl ]
+            - Name: CLIENT_TYPE
+              Value: web
+            - Name: STUB_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, perfTestStubUrl ]
+            - Name: MY_ACCOUNT_URL
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, myAccountUrl ]
+            - Name: SERVICE_NAME
+              Value: !Sub Performance Testing Sample Service - ${Environment}
+            - Name: CLIENT_ID
+              Value: !FindInMap [ EnvironmentConfiguration, !Ref Environment, perfTestClientId ]
+          Secrets:
+            - Name: IDENTITY_SIGNING_PUBLIC_KEY
+              ValueFrom: !Ref IdentitySigningPublicKeySecret
+            - Name: CLIENT_PRIVATE_KEY
+              ValueFrom: !Ref PerfTestClientPrivateKeySecret
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt PerfTestTaskExecutionRole.Arn
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestTaskDefinition
+        - Key: Service
+          Value: Relying Party Performance Testing stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  PerfTestTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: IsStaging
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}PerfTest
+      RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  PerfTestTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: IsStaging
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - !Ref ECSSecretsManagerAccessManagedPolicy
+        - !Ref PerfTestClientPrivateKeySecretAccessManagedPolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestTaskExecutionRole
+        - Key: Service
+          Value: Relying Party Performance Testing stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
   #
   # Load balancing
   #
@@ -522,7 +685,6 @@ Resources:
   ApplicationLoadBalancerSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      # checkov:skip=CKV_AWS_260: PLAT-477 Raised to resolve
       GroupId: !GetAtt ApplicationLoadBalancerSecurityGroup.GroupId
       CidrIp:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
@@ -653,7 +815,6 @@ Resources:
   DocAppApplicationLoadBalancerSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      # checkov:skip=CKV_AWS_260: PLAT-477 Raised to resolve
       GroupId: !GetAtt DocAppApplicationLoadBalancerSecurityGroup.GroupId
       CidrIp:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
@@ -667,6 +828,143 @@ Resources:
     Properties:
       GroupId: !GetAtt DocAppApplicationLoadBalancerSecurityGroup.GroupId
       DestinationSecurityGroupId: !GetAtt DocAppContainerServiceSecurityGroup.GroupId
+      Description: Allow traffic to Container Service
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+
+  PerfTestApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition: IsStaging
+    Properties:
+      SecurityGroups:
+        - !GetAtt PerfTestApplicationLoadBalancerSecurityGroup.GroupId
+      Subnets:
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+      LoadBalancerAttributes:
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: true
+      Scheme: internal
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestApplicationLoadBalancer
+        - Key: Service
+          Value: Relying Party Performance Testing stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  PerfTestApplicationLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: IsStaging
+    Properties:
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      Port: 8080
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Matcher:
+        HttpCode: 200
+      TargetType: ip
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 5
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestApplicationLoadBalancerTargetGroup
+        - Key: Service
+          Value: Relying Party Performance Testing stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  PerfTestApplicationLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: IsStaging
+    Properties:
+      # checkov:skip=CKV_AWS_2:Certificate generation must be resolved before the listener can use HTTPS.
+      # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled.
+      DefaultActions:
+        - TargetGroupArn: !Ref PerfTestApplicationLoadBalancerTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref PerfTestApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  PerfTestApplicationLoadBalancerListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Condition: IsStaging
+    Properties:
+      Actions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref PerfTestApplicationLoadBalancerTargetGroup
+                Weight: 1
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: User-Agent
+            Values:
+              - Mozilla
+      ListenerArn: !Ref PerfTestApplicationLoadBalancerListener
+      Priority: 1
+
+  PerfTestApplicationLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsStaging
+    Properties:
+      GroupDescription: Security Group for the Performance Testing Application Load Balancer
+      GroupName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - PerfTestApplicationLoadBalancer
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PerfTestApplicationLoadBalancerSecurityGroup
+        - Key: Service
+          Value: Relying Party Performance Testing stub
+        - Key: Source
+          Value: govuk-one-login/relying-party-stub
+        - Key: Owner
+          Value: di-orchestration@digital.cabinet-office.gov.uk
+
+  PerfTestApplicationLoadBalancerSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: IsStaging
+    Properties:
+      GroupId: !GetAtt PerfTestApplicationLoadBalancerSecurityGroup.GroupId
+      CidrIp:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
+      Description: Allow traffic from the VPC on port 80
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+
+  PerfTestApplicationLoadBalancerSecurityGroupEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: IsStaging
+    Properties:
+      GroupId: !GetAtt PerfTestApplicationLoadBalancerSecurityGroup.GroupId
+      DestinationSecurityGroupId: !GetAtt PerfTestContainerServiceSecurityGroup.GroupId
       Description: Allow traffic to Container Service
       IpProtocol: tcp
       FromPort: 8080
@@ -902,6 +1200,114 @@ Resources:
           - "authorizers/"
           - !Ref DocAppApiGatewayAuthorizer
 
+  PerfTestApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Condition: IsStaging
+    Properties:
+      Name: !Sub ${AWS::StackName}-PerfTestApiGateway
+      ProtocolType: HTTP
+      Tags:
+        Service: Relying Party Performance Testing stub
+        Name: !Sub ${AWS::StackName}-PerfTestApiGateway
+        Source: govuk-one-login/relying-party-stub
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
+
+  PerfTestApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Condition: IsStaging
+    Properties:
+      ApiId: !Ref PerfTestApiGateway
+      IntegrationType: HTTP_PROXY
+      ConnectionId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcLinkId
+      ConnectionType: VPC_LINK
+      IntegrationMethod: ANY
+      IntegrationUri: !Ref PerfTestApplicationLoadBalancerListener
+      PayloadFormatVersion: 1.0
+
+  PerfTestApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: IsStaging
+    Properties:
+      ApiId: !Ref PerfTestApiGateway
+      RouteKey: ANY /{proxy+}
+      Target: !Sub integrations/${PerfTestApiGatewayIntegration}
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref PerfTestApiGatewayAuthorizer
+
+  PerfTestApiDefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Condition: IsStaging
+    Properties:
+      ApiId: !Ref PerfTestApiGateway
+      StageName: $default
+      AutoDeploy: true
+      Tags:
+        Service: Relying Party Performance Testing stub
+        Name: !Sub ${AWS::StackName}-PerfTestApiDefaultStage
+        Source: govuk-one-login/relying-party-stub
+        Owner: di-orchestration@digital.cabinet-office.gov.uk
+      AccessLogSettings:
+        DestinationArn: !GetAtt PerfTestApiGatewayAccessLogsGroup.Arn
+        Format:
+          Fn::ToJsonString:
+            requestId: $context.requestId
+            ip: $context.identity.sourceIp
+            requestTime: $context.requestTime
+            httpMethod: $context.httpMethod
+            path: $context.path
+            routeKey: $context.routeKey
+            status: $context.status
+            protocol: $context.protocol
+            responseLength: $context.responseLength
+
+  PerfTestApiGatewayAccessLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: IsStaging
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-PerfTestApiGatewayAccessLogsGroup
+      RetentionInDays: 90
+      KmsKeyId: !GetAtt KmsKey.Arn
+
+  PerfTestApiGatewayAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Condition: IsStaging
+    Properties:
+      Name: !Sub ${AWS::StackName}-PerfTestApiGatewayAuthorizer
+      ApiId: !Ref PerfTestApiGateway
+      AuthorizerResultTtlInSeconds: 60
+      IdentitySource:
+        - $context.identity.sourceIp
+      AuthorizerType: REQUEST
+      AuthorizerPayloadFormatVersion: 2.0
+      EnableSimpleResponses: true
+      AuthorizerUri: !Join
+        - ""
+        - - "arn:aws:apigateway:"
+          - !Ref AWS::Region
+          - :lambda:path/2015-03-31/functions/
+          - !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
+          - /invocations
+
+  PerfTestApiGatewayAuthorizerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsStaging
+    Properties:
+      FunctionName: !GetAtt ApiGatewayLambdaFunctionAuthorizer.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ""
+        - - "arn:aws:execute-api:"
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref PerfTestApiGateway
+          - "/"
+          - "authorizers/"
+          - !Ref PerfTestApiGatewayAuthorizer
+
   #
   # KMS
   #
@@ -964,6 +1370,13 @@ Resources:
       Name: !Sub /stubs/rp-${Environment}/DOC_APP_CLIENT_PRIVATE_KEY
       KmsKeyId: !GetAtt KmsKey.Arn
 
+  PerfTestClientPrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Condition: IsStaging
+    Properties:
+      Name: !Sub /stubs/rp-${Environment}/PERF_TEST_CLIENT_PRIVATE_KEY
+      KmsKeyId: !GetAtt KmsKey.Arn
+
   ECSSecretsManagerAccessManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -999,3 +1412,15 @@ Resources:
             Action:
               - secretsmanager:GetSecretValue
             Resource: !Ref DocAppClientPrivateKeySecret
+
+  PerfTestClientPrivateKeySecretAccessManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsStaging
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref PerfTestClientClientPrivateKeySecret
