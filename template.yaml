@@ -1423,4 +1423,4 @@ Resources:
           - Effect: Allow
             Action:
               - secretsmanager:GetSecretValue
-            Resource: !Ref PerfTestClientClientPrivateKeySecret
+            Resource: !Ref PerfTestClientPrivateKeySecret
