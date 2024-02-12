@@ -1424,3 +1424,17 @@ Resources:
             Action:
               - secretsmanager:GetSecretValue
             Resource: !Ref PerfTestClientPrivateKeySecret
+
+Outputs:
+  RpApiId:
+    Value: !Ref ApiGateway
+    Export:
+      Name: !Sub RpApiGateway-${Environment}
+  DocAppApiId:
+    Value: !Ref DocAppApiGateway
+    Export:
+      Name: !Sub DocAppApiGateway-${Environment}
+  PerfTestApiId:
+    Value: !Ref PerfTestApiGateway
+    Export:
+      Name: !Sub PerfTestApiGateway-${Environment}

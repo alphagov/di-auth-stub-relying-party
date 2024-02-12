@@ -123,7 +123,7 @@ Resources:
         - doc-app-rp.stubs.account.gov.uk
         - !Sub doc-app-rp-${Environment}.build.stubs.account.gov.uk
       ApiId:
-        Fn::ImportValue: !Sub RpApiGateway-${Environment}
+        Fn::ImportValue: !Sub DocAppApiGateway-${Environment}
       Stage: "$default"
     DependsOn:
       - DocAppRpStubApiDomain
@@ -171,7 +171,7 @@ Resources:
     Properties:
       DomainName: perf-test-rp-staging.build.stubs.account.gov.uk
       ApiId:
-        Fn::ImportValue: !Sub "PerfTestRpApiGateway-${Environment}"
+        Fn::ImportValue: !Sub PerfTestRpApiGateway-${Environment}
       Stage: "$default"
     DependsOn:
       - PerfTestRpStubApiDomain
