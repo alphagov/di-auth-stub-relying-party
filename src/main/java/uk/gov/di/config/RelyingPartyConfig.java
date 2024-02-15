@@ -58,6 +58,10 @@ public class RelyingPartyConfig {
                 "OP_BASE_URL", "https://api.build.auth.ida.digital.cabinet-office.gov.uk");
     }
 
+    public static Optional<String> clientSecret() {
+        return Optional.ofNullable(getenv().get("TOKEN_CLIENT_SECRET"));
+    }
+
     public static String getCloudFoundryUri() {
         if (cfEnv.isInCf() && cfEnv.getApp().getUris().size() > 0) {
             return format("https://{0}", cfEnv.getApp().getUris().get(0));
