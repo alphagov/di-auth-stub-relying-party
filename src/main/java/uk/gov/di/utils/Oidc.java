@@ -13,9 +13,10 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.langtag.LangTag;
 import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.*;
-import com.nimbusds.oauth2.sdk.auth.JWTAuthenticationClaimsSet;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
-import com.nimbusds.oauth2.sdk.id.Audience;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
@@ -53,6 +54,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import static uk.gov.di.config.RelyingPartyConfig.clientSecret;
 
 public class Oidc {
 
@@ -109,18 +112,13 @@ public class Oidc {
                         new AuthorizationCode(authCode), new URI(authCallbackUrl));
 
         try {
-            LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(5);
-            Date expiryDate = Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
-            JWTAuthenticationClaimsSet claimsSet =
-                    new JWTAuthenticationClaimsSet(
-                            this.clientId,
-                            new Audience(this.providerMetadata.getTokenEndpointURI().toString()));
-            claimsSet.getExpirationTime().setTime(expiryDate.getTime());
+            var clientAuthentication =
+                    clientSecret().map(this::clientSecretPost).orElseGet(this::privateKeyJwt);
 
             var request =
                     new TokenRequest(
                             this.providerMetadata.getTokenEndpointURI(),
-                            new PrivateKeyJWT(signJwtWithClaims(claimsSet.toJWTClaimsSet())),
+                            clientAuthentication,
                             codeGrant,
                             null,
                             null,
@@ -151,6 +149,26 @@ public class Oidc {
             LOG.error("Unexpected exception thrown when making token request", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private ClientAuthentication clientSecretPost(String secret) {
+        return new ClientSecretPost(new ClientID(this.clientId), new Secret(secret));
+    }
+
+    private ClientAuthentication privateKeyJwt() {
+        var localDateTime = LocalDateTime.now().plusMinutes(5);
+        var expiryDate = Date.from(localDateTime.atZone(ZoneId.of("UTC")).toInstant());
+
+        var claims =
+                new JWTClaimsSet.Builder()
+                        .subject(this.clientId.getValue())
+                        .issuer(this.clientId.getValue())
+                        .audience(this.providerMetadata.getTokenEndpointURI().toString())
+                        .expirationTime(expiryDate)
+                        .claim("client_id", this.clientId)
+                        .build();
+
+        return new PrivateKeyJWT(signJwtWithClaims(claims));
     }
 
     public AuthenticationRequest buildJarAuthorizeRequest(
