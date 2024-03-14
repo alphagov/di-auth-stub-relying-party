@@ -1,3 +1,7 @@
+# Archived
+
+This repository has been archived. Continued development takes place at its new location: [govuk-one-login/relying-party-stub](https://github.com/govuk-one-login/relying-party-stub)
+
 # di-auth-stub-relying party
 
 ## Summary
